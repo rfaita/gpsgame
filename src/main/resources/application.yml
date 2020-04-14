@@ -1,0 +1,76 @@
+spring:
+  cloud:
+    function:
+      definition: playerGpsTrackerSupplier;playerGpsTracker;playerCommunication;eventGenerator;eventNotifier
+    stream:
+      bindings:
+        playerGpsTrackerSupplier-out-0:
+          destination: player.gps.tracker
+          binder: rabbit
+        playerGpsTracker-in-0:
+          destination: player.gps.tracker
+          binder: rabbit
+          group: player.gps.tracker.persistent
+        eventGenerator-in-0:
+          destination: player.gps.tracker
+          binder: rabbit
+          group: event.generator
+        eventNotifier-in-0:
+          destination: player.gps.tracker
+          binder: rabbit
+          group: event.notifier
+        playerCommunication-in-0:
+          destination: player.communication
+          binder: rabbit
+          group: player.communication
+      rabbit:
+        bindings:
+          playerGpsTracker-in-0:
+            consumer:
+              queueNameGroupOnly: true
+              autoBindDlq: true
+          eventGenerator-in-0:
+            consumer:
+              queueNameGroupOnly: true
+              autoBindDlq: true
+          eventNotifier-in-0:
+            consumer:
+              queueNameGroupOnly: true
+              autoBindDlq: true
+          playerCommunication-in-0:
+            consumer:
+              queueNameGroupOnly: true
+              autoBindDlq: true
+
+      binders:
+        rabbit:
+          type: rabbit
+          defaultCandidate: false
+          inheritEnvironment: false
+          environment:
+            spring:
+              rabbitmq:
+                host: localhost
+                port: 5672
+                username: guest
+                password: guest
+server:
+  port: 9091
+
+---
+spring:
+  profiles: docker-compose
+  cloud:
+    stream:
+      binders:
+        rabbit:
+          type: rabbit
+          defaultCandidate: false
+          inheritEnvironment: false
+          environment:
+            spring:
+              rabbitmq:
+                host: rabbitmq
+                port: 5672
+                username: guest
+                password: guest
