@@ -23,6 +23,7 @@ public class EventGeneratorStreamConfig {
 
         return eventGenerator ->
                 eventGenerator
+                        .log(EventGeneratorStreamConfig.class.getName())
                         .map(playerPosition -> Position.builder().lat(playerPosition.getLat()).lon(playerPosition.getLon()).build())
                         .flatMap(service::generate)
                         .doOnError(throwable -> log.error(throwable.getMessage(), throwable))

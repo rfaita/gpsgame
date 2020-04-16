@@ -31,6 +31,7 @@ public class PlayerPositionStreamConfig {
 
         return playerGpsTracker ->
                 playerGpsTracker
+                        .log(EmitterProcessor.class.getName())
                         .flatMap(service::track)
                         .doOnError(throwable -> log.error(throwable.getMessage(), throwable))
                         .subscribe();

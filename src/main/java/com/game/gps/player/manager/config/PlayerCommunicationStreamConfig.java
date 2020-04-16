@@ -2,7 +2,7 @@ package com.game.gps.player.manager.config;
 
 import com.game.gps.player.manager.dto.Message;
 import com.game.gps.player.manager.model.PlayerPosition;
-import com.game.gps.player.manager.service.PlayerPositionService;
+import com.game.gps.player.manager.service.ReplyMessageService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -11,20 +11,29 @@ import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Configuration
 @Slf4j
-@AllArgsConstructor
 public class PlayerCommunicationStreamConfig {
 
-    private final EmitterProcessor<Message> sendMessageEmitter;
+    @Bean("playerCommunicationEmitter")
+    public EmitterProcessor<Message> playerCommunicationEmitter() {
+        return EmitterProcessor.create();
+    }
 
     @Bean
-    public Consumer<Flux<Message>> playerCommunication() {
+    public Supplier<Flux<Message>> playerCommunicationSupplier(
+            final EmitterProcessor<Message> playerCommunicationEmitter) {
+        return () -> playerCommunicationEmitter;
+    }
+    @Bean
+    public Consumer<Flux<Message>> playerCommunication(final ReplyMessageService replyMessageService) {
 
         return playerCommunication ->
                 playerCommunication
-                        .doOnNext(sendMessageEmitter::onNext)
+                        .log(PlayerCommunicationStreamConfig.class.getName())
+                        .doOnNext(replyMessageService.getProcessor()::onNext)
                         .doOnError(throwable -> log.error(throwable.getMessage(), throwable))
                         .subscribe();
     }

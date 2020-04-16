@@ -1,7 +1,7 @@
 spring:
   cloud:
     function:
-      definition: playerGpsTrackerSupplier;playerGpsTracker;playerCommunication;eventGenerator;eventNotifier
+      definition: playerGpsTrackerSupplier;playerGpsTracker;playerCommunication;playerCommunicationSupplierpe   ;eventGenerator;eventNotifier
     stream:
       bindings:
         playerGpsTrackerSupplier-out-0:
@@ -19,6 +19,9 @@ spring:
           destination: player.gps.tracker
           binder: rabbit
           group: event.notifier
+        playerCommunicationSupplier-out-0:
+          destination: player.communication
+          binder: rabbit
         playerCommunication-in-0:
           destination: player.communication
           binder: rabbit
