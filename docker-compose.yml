@@ -19,6 +19,11 @@ services:
         UTIL_DIR: src/main/docker/
     ports:
       - "9091:9091"
+    depends_on:
+      - redis
+      - rabbitmq
+    deploy:
+      replicas: 3
     environment:
       - WAIT_FOR_IT=rabbitmq:5672 redis:6379
       - JAVA_OPTS=-Xmx512m -Xms256m -Dspring.profiles.active=docker-compose
