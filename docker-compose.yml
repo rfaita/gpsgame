@@ -1,0 +1,29 @@
+version: "3.4"
+services:
+  redis:
+    image: redis
+    networks:
+      - game
+
+  rabbitmq:
+    image: rabbitmq:management
+    networks:
+      - game
+
+  game:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile
+      args:
+        JAR_FILE: target/app.jar
+        UTIL_DIR: src/main/docker/
+    ports:
+      - "9091:9091"
+    environment:
+      - WAIT_FOR_IT=rabbitmq:5672 redis:6379
+      - JAVA_OPTS=-Xmx512m -Xms256m -Dspring.profiles.active=docker-compose
+    networks:
+      - game
+
+networks:
+  game:
