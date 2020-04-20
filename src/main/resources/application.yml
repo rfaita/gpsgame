@@ -18,10 +18,16 @@ spring:
           destination: player.gps.tracker
           binder: rabbit
           group: event.generator
+        eventGenerator-out-0:
+          destination: player.communication
+          binder: rabbit
         eventNotifier-in-0:
           destination: player.gps.tracker
           binder: rabbit
           group: event.notifier
+        eventNotifier-out-0:
+          destination: player.communication
+          binder: rabbit
         playerCommunicationSupplier-out-0:
           destination: player.communication
           binder: rabbit

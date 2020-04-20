@@ -1,11 +1,12 @@
 package com.game.gps.player.manager.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.gps.player.manager.dto.Message;
 
-import com.game.gps.player.manager.dto.PlayerPositionMessage;
+import com.game.gps.player.manager.dto.Position;
 import com.game.gps.player.manager.model.PlayerPosition;
 import com.game.gps.player.manager.producer.PlayerPositionProducer;
 import com.game.gps.player.manager.service.ReplyMessageService;
@@ -16,6 +17,7 @@ import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import org.springframework.web.util.UriTemplate;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -36,6 +38,15 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
         return parameters.getOrDefault("playerId", "undefined");
     }
 
+    private String getPlayerIdFromMessage(final String message) {
+        try {
+            Message m = mapper.readValue(message, Message.class);
+            return m.getPlayerId();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Parsing message error", e);
+        }
+    }
+
     private String parseMessageToString(final Message message) {
         try {
             return mapper.writeValueAsString(message);
@@ -44,20 +55,21 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    private void handleMessage(final String playerId, final String message) {
+    private Flux<Void> handleMessage(final String playerId, final String message) {
         try {
             Message m = mapper.readValue(message, Message.class);
             switch (m.getType()) {
                 case TRACK_GPS: {
-                    PlayerPositionMessage playerPositionMessage = mapper.readValue(message, PlayerPositionMessage.class);
-                    playerPositionProducer.send(PlayerPosition.builder()
-                            .id(playerId)
-                            .lat(playerPositionMessage.getLat())
-                            .lon(playerPositionMessage.getLon())
-                            .build());
+                    Message<Position> fullMessage = mapper.readValue(message, new TypeReference<>() {
+                    });
+                    fullMessage.setPlayerId(playerId);
+                    playerPositionProducer.send(fullMessage);
                     break;
                 }
             }
+
+            return Flux.never();
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Parsing message error", e);
         }
@@ -70,12 +82,19 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
         return session.send(
                 replyMessageService.getProcessor()
                         .filter(message -> getPlayerId(session).equals(message.getPlayerId()))
-                        .map(DefaultWebSocketHandler.this::parseMessageToString)
+                        .log(DefaultWebSocketHandler.class.getName() + ".out")
+                        .doOnError(throwable -> log.error(throwable.getMessage(), throwable))
+                        .map(this::parseMessageToString)
                         .map(session::textMessage)
         ).and(
                 session.receive()
                         .map(WebSocketMessage::getPayloadAsText)
+                        .log(DefaultWebSocketHandler.class.getName() + ".in")
                         .doOnNext(message -> this.handleMessage(getPlayerId(session), message))
+                        .onErrorContinue((throwable, o) -> log.error(throwable.getMessage(), throwable))
+                        .doOnTerminate(() -> log.info("Client exit."))
+                        .doOnSubscribe(subscription -> log.info("New Client connect: {}", subscription))
+                        .doOnError(throwable -> log.error(throwable.getMessage(), throwable))
         );
     }
 }

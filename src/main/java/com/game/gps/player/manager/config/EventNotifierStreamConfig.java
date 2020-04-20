@@ -1,21 +1,23 @@
 package com.game.gps.player.manager.config;
 
 
-import com.game.gps.player.manager.dto.EventMessage;
 import com.game.gps.player.manager.dto.Message;
 import com.game.gps.player.manager.dto.MessageType;
 import com.game.gps.player.manager.dto.Position;
+import com.game.gps.player.manager.dto.PositionMessage;
+import com.game.gps.player.manager.model.Event;
 import com.game.gps.player.manager.model.PlayerPosition;
 import com.game.gps.player.manager.service.EventService;
-import com.game.gps.player.manager.service.ReplyMessageService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.function.Function;
+
+import static com.game.gps.player.manager.util.ListUtil.concat;
 
 @Configuration
 @Slf4j
@@ -23,25 +25,30 @@ import java.util.function.Consumer;
 public class EventNotifierStreamConfig {
 
     @Bean
-    public Consumer<Flux<PlayerPosition>> eventNotifier(final EventService service,
-                                                        final EmitterProcessor<Message> playerCommunicationEmitter) {
+    public Function<Flux<PositionMessage>, Flux<Message<List<Event>>>> eventNotifier(final EventService service) {
         return eventGenerator ->
                 eventGenerator
                         .log(EventNotifierStreamConfig.class.getName())
-                        .flatMap(playerPosition ->
+                        .flatMap(positionMessage ->
                                 service.findAllByPosition(
                                         Position.builder()
-                                                .lat(playerPosition.getLat())
-                                                .lon(playerPosition.getLon())
+                                                .lat(positionMessage.getPayload().getLat())
+                                                .lon(positionMessage.getPayload().getLon())
                                                 .build())
-                                        .map(event ->
-                                                EventMessage.builder()
+                                        .reduce(
+                                                Message.<List<Event>>builder()
                                                         .type(MessageType.EVENT_NOTIFICATION)
-                                                        .playerId(playerPosition.getId())
-                                                        .event(event)
-                                                        .build()))
-                        .doOnNext(playerCommunicationEmitter::onNext)
-                        .doOnError(throwable -> log.error(throwable.getMessage(), throwable))
-                        .subscribe();
+                                                        .playerId(positionMessage.getPlayerId())
+                                                        .payload(List.of())
+                                                        .build(),
+                                                (message, event) -> Message.<List<Event>>builder()
+                                                            .type(message.getType())
+                                                            .playerId(message.getPlayerId())
+                                                            .payload(concat(message.getPayload(), event))
+                                                            .build()
+                                                ))
+                                        .filter(listMessage -> !listMessage.getPayload().isEmpty())
+                        .log(EventNotifierStreamConfig.class.getName())
+                        .doOnError(throwable -> log.error(throwable.getMessage(), throwable));
     }
 }
