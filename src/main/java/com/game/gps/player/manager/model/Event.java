@@ -15,4 +15,5 @@ public class Event {
     private String id;
     private String name;
     private Position position;
+    private Long expireTime;
 }

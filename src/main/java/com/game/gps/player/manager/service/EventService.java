@@ -5,14 +5,18 @@ import com.game.gps.player.manager.dto.Position;
 import com.game.gps.player.manager.model.Event;
 import com.game.gps.player.manager.repository.EventRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class EventService {
 
     private final EventProperties eventProperties;
@@ -20,21 +24,30 @@ public class EventService {
     private final EventRepository eventRepository;
 
     public Mono<String> generate(Position position) {
-        if (randomService.randomPercentage() <= eventProperties.getEventPercentageGenerator()) {
 
-            final String id = UUID.randomUUID().toString();
+        final String id = UUID.randomUUID().toString();
 
-            return this.canGenerateEventsInRadius(position)
-                    .filter(Boolean::booleanValue)
-                    .map(canDo -> Event.builder()
-                            .id(id)
-                            .position(position)
-                            .build())
-                    .flatMap(eventRepository::save)
-                    .map(l -> id);
-        }
-        return Mono.empty();
+        return this.rollDice()
+                .filter(Boolean::booleanValue)
+                .flatMap(canDo -> this.canGenerateEventsInRadius(position))
+                .filter(Boolean::booleanValue)
+                .map(canDo -> Event.builder()
+                        .id(id)
+                        .position(position)
+                        .expireTime(generateEventDuration())
+                        .build())
+                .flatMap(eventRepository::save)
+                .map(l -> id);
 
+    }
+
+    private Long generateEventDuration() {
+        return System.currentTimeMillis()
+                + randomService.random(eventProperties.getMinEventDuration(), eventProperties.getMaxEventDuration());
+    }
+
+    private Mono<Boolean> rollDice() {
+        return Mono.just(randomService.randomPercentage() <= eventProperties.getEventPercentageGenerator());
     }
 
     private Mono<Boolean> canGenerateEventsInRadius(Position position) {
@@ -50,4 +63,19 @@ public class EventService {
         return eventRepository.findByCircle(position, eventProperties.getRadiusToFindEvents());
 
     }
+
+    @Scheduled(fixedDelay = 10000)
+    public void expire() {
+
+        log.info("Expire events started.");
+        this.eventRepository.findExpiredEvents()
+                .reduce(new ArrayList<String>(), (list, id) -> {
+                    list.add(id);
+                    return list;
+                })
+                .filter(ids -> !ids.isEmpty())
+                .flatMap(this.eventRepository::deleteByIds)
+                .subscribe(size -> log.info("Events expired: {}", size));
+    }
+
 }

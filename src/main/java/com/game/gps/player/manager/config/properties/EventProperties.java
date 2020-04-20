@@ -21,4 +21,8 @@ public class EventProperties {
     private Integer radiusToFindEvents = 500;
 
     private Integer maxEventsInArea = 2;
+
+    private Integer minEventDuration = 60000;
+
+    private Integer maxEventDuration = 120000;
 }
