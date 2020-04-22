@@ -48,7 +48,6 @@ public class EventNotifierStreamConfig {
                                                             .build()
                                                 ))
                                         .filter(listMessage -> !listMessage.getPayload().isEmpty())
-                        .log(EventNotifierStreamConfig.class.getName())
                         .doOnError(throwable -> log.error(throwable.getMessage(), throwable));
     }
 }

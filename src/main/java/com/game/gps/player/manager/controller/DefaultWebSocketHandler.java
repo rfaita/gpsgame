@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.game.gps.player.manager.dto.GenericValue;
 import com.game.gps.player.manager.dto.Message;
 
 import com.game.gps.player.manager.dto.Position;
 import com.game.gps.player.manager.model.PlayerPosition;
 import com.game.gps.player.manager.producer.PlayerPositionProducer;
+import com.game.gps.player.manager.producer.VisitEventProducer;
 import com.game.gps.player.manager.service.ReplyMessageService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
 
     private final ReplyMessageService replyMessageService;
     private final PlayerPositionProducer playerPositionProducer;
+    private final VisitEventProducer visitEventProducer;
     private final ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -64,6 +67,13 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
                     });
                     fullMessage.setPlayerId(playerId);
                     playerPositionProducer.send(fullMessage);
+                    break;
+                }
+                case VISIT_EVENT: {
+                    Message<GenericValue> fullMessage = mapper.readValue(message, new TypeReference<>() {
+                    });
+                    fullMessage.setPlayerId(playerId);
+                    visitEventProducer.send(fullMessage);
                     break;
                 }
             }

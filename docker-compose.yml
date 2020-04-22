@@ -10,6 +10,11 @@ services:
     networks:
       - game
 
+  mongodb:
+    image: mongo
+    networks:
+      - game
+
   game:
     build:
       context: .
@@ -25,7 +30,7 @@ services:
     deploy:
       replicas: 3
     environment:
-      - WAIT_FOR_IT=rabbitmq:5672 redis:6379
+      - WAIT_FOR_IT=rabbitmq:5672 redis:6379 mongodb:27017
       - JAVA_OPTS=-Xmx512m -Xms256m -Dspring.profiles.active=docker-compose
     networks:
       - game

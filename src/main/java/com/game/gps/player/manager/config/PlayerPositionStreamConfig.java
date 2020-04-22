@@ -35,7 +35,7 @@ public class PlayerPositionStreamConfig {
 
         return playerGpsTracker ->
                 playerGpsTracker
-                        .log(EmitterProcessor.class.getName())
+                        .log(PlayerPositionStreamConfig.class.getName())
                         .map(positionMessage ->
                                 PlayerPosition.builder()
                                         .id(positionMessage.getPlayerId())
