@@ -1,105 +1,119 @@
 package com.game.gps.player.manager.model.minigame;
 
 import com.game.gps.player.manager.model.*;
+import com.game.gps.player.manager.model.action.ActionType;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-@Accessors(fluent = true)
-@Getter
-@Setter
+@Document
+@Builder
+@Getter//Remove
 public class MiniGame {
 
+    @Id
     private String id;
     private EventGenerated eventGenerated;
-    private SituationGenerated firstSituation;
-    private Player player;
 
-    private Room currentRoom;
-    private SituationGenerated currentSituation;
-    private Action currentAction;
-    private List<Action> currentActions;
+    private MiniGameState currentState;
 
+    private MiniGameDataCache dataCache;
 
-    private List<Room> allRooms;
-    private List<Situation> allSituations;
-    private List<Action> allActions;
-    private List<Item> allItems;
+    private final List<MiniGameState> stateHistory = new ArrayList<>();
 
-    private List<Decision> decisions;
-
-
-
-
-
-    public List<Action> getCurrentActions() {
-        return this.currentActions;
-    }
-
-    public Mono<MiniGame> executeAction(String actionId) {
-        Optional<Action> optionalAction = this.currentActions.stream()
-                .filter(action -> actionId.equals(action.getId()))
-                .findFirst();
-
-        if (optionalAction.isPresent()) {
-            this.currentAction = optionalAction.get();
-            this.currentAction.getActionType().runAllExecutors(this);
+    private void saveCurrentState() {
+        if (this.currentState != null) {
+            this.stateHistory.add(this.currentState);
         }
-
-        return Mono.just(this);
     }
 
-    private Room getRandomRoomByPlaceId() {
-        return this.allRooms.stream()
-                .filter(room -> room.getUsedInPlaces().contains(this.eventGenerated.getPlace().getId()))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
-                .findAny()
-                .get();
+    private void setCurrentState(MiniGameState miniGameState) {
+        this.saveCurrentState();
+        this.currentState = miniGameState;
     }
 
-    private Situation getRandomSituationByRoomId() {
-        return this.allSituations.stream()
-                .filter(situation -> situation.getUsedInRooms().contains(this.currentRoom.getId()))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
-                .findAny()
-                .get();
+    private MiniGameState getCurrentState() {
+        return this.currentState;
     }
 
-    private Situation getRandomSituationBySituationId() {
-        return this.allSituations.stream()
-                .filter(situation -> situation.getUsedInSituations().contains(this.currentSituation.getId()))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
-                .findAny()
-                .get();
+    public MiniGame dataCache(MiniGameDataCache dataCache) {
+        this.dataCache = dataCache;
+        return this;
     }
 
-    private List<Action> getAllActionsBySituationId() {
-        return this.allActions.stream()
-                .filter(action -> action.getUsedInSituations().contains(this.currentSituation.getId()))
-                .collect(Collectors.toList());
+    public MiniGame clearDataCache() {
+        this.dataCache = null;
+        return this;
+    }
+
+    public MiniGame start(final Player player) {
+
+        Situation nextSituation = this.eventGenerated.getFirstSituation().toSituation();
+
+        this.setCurrentState(
+                MiniGameState.builder()
+                        .player(player)
+                        .currentSituation(nextSituation)
+                        .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
+                        .build()
+        );
+        return this;
+    }
+
+    public Mono<MiniGame> executeAction(final String actionId) {
+
+        this.setCurrentState(
+                this.getCurrentState().toBuilder()
+                        .currentAction(getActionById(actionId))
+                        .build());
+
+        return Mono.just(this.getCurrentState().getCurrentAction().getType().runAllExecutors(this));
     }
 
 
     public void createNewRoomByPlace() {
 
-        this.currentRoom = this.getRandomRoomByPlaceId();
-        //cast
-        //this.currentSituation = this.getRandomSituationByRoomId();
-        this.currentActions = this.getAllActionsBySituationId();
+        Room nextRoom
+                = this.dataCache.getRandomRoomByPlaceId(this.eventGenerated.getPlace().getId());
+        Situation nextSituation = this.dataCache.getRandomSituationByRoomId(nextRoom.getId());
 
+        this.setCurrentState(
+                this.getCurrentState().toBuilder()
+                        .currentRoom(nextRoom)
+                        .currentSituation(nextSituation)
+                        .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
+                        .build());
     }
 
     public void createNewSituationBySituation() {
 
-        //this.currentSituation = this.getRandomSituationBySituationId();
-        this.currentActions = this.getAllActionsBySituationId();
+        Situation nextSituation
+                = this.dataCache.getRandomSituationBySituationId(this.currentState.getCurrentSituation().getId());
 
+        this.setCurrentState(
+                this.getCurrentState().toBuilder()
+                        .currentSituation(nextSituation)
+                        .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
+                        .build());
+
+    }
+
+    private Action getActionById(final String actionId) {
+        return this.currentState.getCurrentActions().stream()
+                .filter(action -> actionId.equals(action.getId()))
+                .findFirst().orElse(Action.builder().type(ActionType.NO_OP).build());
+    }
+
+    private List<Action> getAllActionsBySituationId(final String situationId) {
+        return this.dataCache.getAllActionsBySituationId(situationId).stream()
+                .filter(action -> action.getType().runAllVerifiers(MiniGame.this))
+                .collect(Collectors.toList());
     }
 
 }

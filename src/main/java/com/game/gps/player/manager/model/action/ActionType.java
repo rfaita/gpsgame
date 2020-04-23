@@ -1,14 +1,16 @@
 package com.game.gps.player.manager.model.action;
 
+import com.game.gps.player.manager.model.action.executor.NoOpExecutor;
+import com.game.gps.player.manager.model.action.executor.UnlockDoorActionExecutor;
+import com.game.gps.player.manager.model.action.verifier.NoOpVerifier;
 import com.game.gps.player.manager.model.minigame.MiniGame;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 public enum ActionType {
 
-    A(null, null);
+    NO_OP(new NoOpVerifier(), new NoOpExecutor()),
+    NEXT_DOOR(new NoOpVerifier(), new UnlockDoorActionExecutor());
 
     private final List<ActionVerifier> actionVerifiers;
     private final List<ActionExecutor> actionExecutors;
@@ -31,15 +33,19 @@ public enum ActionType {
         return actionExecutors;
     }
 
-    public Mono<Boolean> runAllVerifiers(final MiniGame miniGame) {
-        return Flux.just(this.getActionVerifiers().toArray(new ActionVerifier[]{}))
-                .reduce(Boolean.TRUE, (aBoolean, actionVerifier) -> aBoolean &= actionVerifier.apply(miniGame));
+    public Boolean runAllVerifiers(final MiniGame miniGame) {
+        return this.getActionVerifiers().stream()
+                .map(actionVerifier -> actionVerifier.apply(miniGame))
+                .reduce(Boolean::logicalAnd)
+                .get();
 
     }
 
-    public Mono<MiniGame> runAllExecutors(final MiniGame miniGame) {
-        return Flux.just(this.getActionExecutors().toArray(new ActionExecutor[]{}))
-                .reduce(miniGame, (newMiniGame, actionExecuter) -> actionExecuter.apply(newMiniGame));
+    public MiniGame runAllExecutors(final MiniGame miniGame) {
+        return this.getActionExecutors().stream()
+                .reduce((actionExecutor, actionExecutor2) -> ActionExecutor.and(actionExecutor, actionExecutor2))
+                .get()
+                .apply(miniGame);
 
     }
 }

@@ -6,7 +6,6 @@ import com.game.gps.player.manager.dto.MessageType;
 import com.game.gps.player.manager.dto.Position;
 import com.game.gps.player.manager.dto.PositionMessage;
 import com.game.gps.player.manager.model.Event;
-import com.game.gps.player.manager.model.PlayerPosition;
 import com.game.gps.player.manager.service.EventService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +41,12 @@ public class EventNotifierStreamConfig {
                                                         .payload(List.of())
                                                         .build(),
                                                 (message, event) -> Message.<List<Event>>builder()
-                                                            .type(message.getType())
-                                                            .playerId(message.getPlayerId())
-                                                            .payload(concat(message.getPayload(), event))
-                                                            .build()
-                                                ))
-                                        .filter(listMessage -> !listMessage.getPayload().isEmpty())
+                                                        .type(message.getType())
+                                                        .playerId(message.getPlayerId())
+                                                        .payload(concat(message.getPayload(), event))
+                                                        .build()
+                                        ))
+                        .filter(listMessage -> !listMessage.getPayload().isEmpty())
                         .doOnError(throwable -> log.error(throwable.getMessage(), throwable));
     }
 }

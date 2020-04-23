@@ -4,7 +4,7 @@ spring:
     port: 6379
   cloud:
     function:
-      definition: playerGpsTrackerSupplier;playerGpsTracker;playerCommunication;playerCommunicationSupplier;eventGenerator;eventNotifier;visitEvent;visitEventSupplier
+      definition: playerGpsTrackerSupplier;playerGpsTracker;playerCommunication;playerCommunicationSupplier;eventGenerator;eventNotifier;visitEvent;visitEventSupplier;executeAction;executeActionSupplier
     stream:
       bindings:
         playerGpsTrackerSupplier-out-0:
@@ -45,6 +45,17 @@ spring:
         visitEvent-out-0:
           destination: player.communication
           binder: rabbit
+        executeActionSupplier-out-0:
+          destination: event.action
+          binder: rabbit
+        executeAction-in-0:
+          destination: event.action
+          binder: rabbit
+          group: event.action
+        executeAction-out-0:
+          destination: player.communication
+          binder: rabbit
+
       rabbit:
         bindings:
           playerGpsTracker-in-0:
@@ -64,6 +75,10 @@ spring:
               queueNameGroupOnly: true
               autoBindDlq: true
           visitEvent-in-0:
+            consumer:
+              queueNameGroupOnly: true
+              autoBindDlq: true
+          executeAction-in-0:
             consumer:
               queueNameGroupOnly: true
               autoBindDlq: true

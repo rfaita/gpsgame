@@ -19,7 +19,7 @@ public class Action {
 
     @Id
     private String id;
-    private ActionType actionType;
+    private ActionType type;
     private List<String> usedInSituations;
 
     private List<String> possibleRoomsId;

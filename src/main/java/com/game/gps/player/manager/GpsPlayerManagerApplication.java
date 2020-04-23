@@ -1,18 +1,16 @@
 package com.game.gps.player.manager;
 
-import com.game.gps.player.manager.model.Place;
-import com.game.gps.player.manager.model.Situation;
+import com.game.gps.player.manager.model.*;
+import com.game.gps.player.manager.model.action.ActionType;
 import com.game.gps.player.manager.model.type.PlaceType;
 import com.game.gps.player.manager.model.type.SituationType;
-import com.game.gps.player.manager.repository.PlaceRepository;
-import com.game.gps.player.manager.repository.SituationRepository;
+import com.game.gps.player.manager.repository.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 import reactor.core.publisher.Hooks;
 
 import java.util.List;
@@ -28,8 +26,11 @@ public class GpsPlayerManagerApplication implements CommandLineRunner {
         Hooks.onOperatorDebug();
     }
 
+    private final PlayerRepository playerRepository;
     private final PlaceRepository placeRepository;
     private final SituationRepository situationRepository;
+    private final RoomRepository roomRepository;
+    private final ActionRepository actionRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -37,15 +38,12 @@ public class GpsPlayerManagerApplication implements CommandLineRunner {
         this.placeRepository.saveAll(List.of(
                 Place.builder().name("Small House")
                         .id("1")
-                        .description("You see a small house.")
                         .type(PlaceType.COMMON).build(),
                 Place.builder().name("Small Apartment Block")
                         .id("2")
-                        .description("You see a small apartment block, probably has between four and six small apartments.")
                         .type(PlaceType.COMMON).build(),
                 Place.builder().name("Police Station")
                         .id("3")
-                        .description("You see a police station, this can be a dangerous place.")
                         .type(PlaceType.POLICE).build()
         )).subscribe(place -> log.info("Saved place: {}", place));
 
@@ -54,25 +52,46 @@ public class GpsPlayerManagerApplication implements CommandLineRunner {
                 Situation.builder().type(SituationType.FIRST)
                         .id("1")
                         .usedInPlaces(List.of("1", "2"))
-                        .description("teste 1")
+                        .usedInRooms(List.of("1"))
+                        .usedInSituations(List.of("2"))
                         .build(),
                 Situation.builder().type(SituationType.FIRST)
                         .id("2")
                         .usedInPlaces(List.of("2", "3"))
-                        .description("teste 2")
+                        .usedInRooms(List.of("1"))
+                        .usedInSituations(List.of("3"))
                         .build(),
                 Situation.builder().type(SituationType.FIRST)
                         .id("3")
                         .usedInPlaces(List.of("3", "2"))
-                        .description("teste 3")
+                        .usedInRooms(List.of("2"))
+                        .usedInSituations(List.of("4"))
                         .build(),
                 Situation.builder().type(SituationType.FIRST)
                         .id("4")
                         .usedInPlaces(List.of("1", "3"))
-                        .description("teste 4")
+                        .usedInRooms(List.of("3"))
+                        .usedInSituations(List.of("1"))
                         .build()
         )).subscribe(sit -> log.info("Saved situation: {}", sit));
 
+        this.playerRepository.saveAll(List.of(
+                Player.builder().id("rfaita").build(),
+                Player.builder().id("gh").build()
+        )).subscribe(player -> log.info("Saved players: {}", player));
+
+        this.roomRepository.saveAll(List.of(
+                Room.builder().id("1").name("room1").usedInPlaces(List.of("1")).build(),
+                Room.builder().id("2").name("room2").usedInPlaces(List.of("2")).build(),
+                Room.builder().id("3").name("room3").usedInPlaces(List.of("3")).build()
+        )).subscribe(room -> log.info("Saved rooms: {}", room));
+
+        this.actionRepository.saveAll(List.of(
+                Action.builder().id("1").type(ActionType.NEXT_DOOR).usedInSituations(List.of("1")).build(),
+                Action.builder().id("2").type(ActionType.NEXT_DOOR).usedInSituations(List.of("2")).build(),
+                Action.builder().id("3").type(ActionType.NEXT_DOOR).usedInSituations(List.of("3")).build(),
+                Action.builder().id("4").type(ActionType.NEXT_DOOR).usedInSituations(List.of("4")).build()
+        )).subscribe(action -> log.info("Saved actions: {}", action));
 
     }
 }

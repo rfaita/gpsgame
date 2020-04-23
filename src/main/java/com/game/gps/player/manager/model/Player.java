@@ -1,11 +1,19 @@
 package com.game.gps.player.manager.model;
 
-public class Player {
-    public Object getPrimaryWeapon() {
-        return null;
-    }
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-    public Object getSecondaryWeapon() {
-        return null;
-    }
+@Document
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class Player {
+
+    @Id
+    private String id;
 }

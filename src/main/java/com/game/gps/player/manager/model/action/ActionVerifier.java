@@ -6,4 +6,5 @@ import com.game.gps.player.manager.model.minigame.MiniGame;
 public interface ActionVerifier {
 
     Boolean apply(MiniGame miniGame);
+
 }

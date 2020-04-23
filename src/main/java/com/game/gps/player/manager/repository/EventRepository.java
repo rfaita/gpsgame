@@ -2,7 +2,6 @@ package com.game.gps.player.manager.repository;
 
 import com.game.gps.player.manager.dto.Position;
 import com.game.gps.player.manager.model.Event;
-import com.game.gps.player.manager.util.ListUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Circle;
@@ -14,10 +13,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import static com.game.gps.player.manager.util.ListUtil.concat;
 
 @Repository
 @AllArgsConstructor

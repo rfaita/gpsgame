@@ -41,5 +41,13 @@ public class EventGenerated {
         private String id;
         private String description;
         private SituationType type;
+
+        public com.game.gps.player.manager.model.Situation toSituation() {
+            return com.game.gps.player.manager.model.Situation.builder()
+                    .id(this.getId())
+                    .type(this.getType())
+                    .build();
+
+        }
     }
 }

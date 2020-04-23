@@ -22,7 +22,7 @@ public class EventProperties {
 
     private Integer maxEventsInArea = 2;
 
-    private Integer minEventDuration = 60000;
+    private Integer minEventDuration = 600000;
 
-    private Integer maxEventDuration = 120000;
+    private Integer maxEventDuration = 1200000;
 }

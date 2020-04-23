@@ -11,7 +11,7 @@ import reactor.core.publisher.ReplayProcessor;
 @Slf4j
 public class ReplyMessageService {
 
-    private final ReplayProcessor<Message>  processor;
+    private final ReplayProcessor<Message> processor;
 
     public ReplyMessageService() {
         this.processor = ReplayProcessor.cacheLast();
