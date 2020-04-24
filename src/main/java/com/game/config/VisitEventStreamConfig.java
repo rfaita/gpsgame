@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -46,7 +47,13 @@ public class VisitEventStreamConfig {
                                                         .playerId(visitEventMessage.getPlayerId())
                                                         .type(MessageType.START_EVENT)
                                                         .payload(miniGame)
-                                                        .build()))
+                                                        .build())
+                                        .switchIfEmpty(
+                                                Mono.just(Message.<MiniGame>builder()
+                                                        .playerId(visitEventMessage.getPlayerId())
+                                                        .type(MessageType.EVENT_NOT_FOUND)
+                                                        .payload(MiniGame.builder().id(visitEventMessage.getPayload().getValue()).build())
+                                                        .build())))
                         .doOnError(throwable -> log.error(throwable.getMessage(), throwable));
     }
 }

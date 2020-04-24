@@ -8,6 +8,7 @@ import com.game.repository.MiniGameRepository;
 import com.game.repository.RoomRepository;
 import com.game.repository.SituationRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -18,10 +19,7 @@ import java.util.UUID;
 public class MiniGameOrchestrator {
 
     private final EventGeneratedService eventGeneratedService;
-
-    private final ActionRepository actionRepository;
-    private final SituationRepository situationRepository;
-    private final RoomRepository roomRepository;
+    private final MiniGameDataCacheService miniGameDataCacheService;
 
     private final PlayerService playerService;
 
@@ -40,7 +38,7 @@ public class MiniGameOrchestrator {
         return Mono.just(MiniGame.builder().id(UUID.randomUUID().toString()))
                 .zipWith(eventGeneratedMono,
                         (miniGameBuilder, eventGenerated) -> miniGameBuilder.eventGenerated(eventGenerated))
-                .zipWith(this.loadMiniGameDataCache(),
+                .zipWith(this.miniGameDataCacheService.load(),
                         (miniGameBuilder, miniGameDataCache) -> miniGameBuilder.dataCache(miniGameDataCache))
                 .map(miniGameBuilder -> miniGameBuilder.build())
                 .flatMap(miniGame -> this.playerService.findById(playerId)
@@ -58,20 +56,9 @@ public class MiniGameOrchestrator {
         //this.playerService.save()
     }
 
-    private Mono<MiniGameDataCache> loadMiniGameDataCache() {
-        return Mono.just(MiniGameDataCache.builder())
-                .zipWith(this.roomRepository.findAll().collectList(),
-                        (miniGameDataCacheBuilder, rooms) -> miniGameDataCacheBuilder.allRooms(rooms))
-                .zipWith(this.situationRepository.findAll().collectList(),
-                        (miniGameDataCacheBuilder, situations) -> miniGameDataCacheBuilder.allSituations(situations))
-                .zipWith(this.actionRepository.findAll().collectList(),
-                        (miniGameDataCacheBuilder, actions) -> miniGameDataCacheBuilder.allActions(actions))
-                .map(miniGameDataCacheBuilder -> miniGameDataCacheBuilder.build());
-    }
-
     private Mono<MiniGame> loadMiniGameState(String miniGameId) {
         return this.miniGameRepository.findById(miniGameId)
-                .flatMap(miniGame -> this.loadMiniGameDataCache()
+                .flatMap(miniGame -> this.miniGameDataCacheService.load()
                         .map(miniGameDataCache -> miniGame.dataCache(miniGameDataCache))
                 );
 

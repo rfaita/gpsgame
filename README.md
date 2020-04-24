@@ -4,7 +4,7 @@ message to track gps:
 
 message to visit event:
 
-{"type":"VISIT_EVENT", "payload":{"value":"09660820-6d3c-415f-90a4-3839e8754265"}}
+{"type":"VISIT_EVENT", "payload":{"value":"6ded7867-13b3-4c8e-9c55-daca159a7631"}}
 
 message to execute action on event: 
 
