@@ -41,7 +41,7 @@ spring:
         visitEvent-in-0:
           destination: event.visit
           binder: rabbit
-          group: event.visist
+          group: event.visit
         visitEvent-out-0:
           destination: player.communication
           binder: rabbit
