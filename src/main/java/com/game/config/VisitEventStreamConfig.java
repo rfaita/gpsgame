@@ -8,6 +8,7 @@ import com.game.model.minigame.MiniGame;
 import com.game.service.EventGeneratedService;
 import com.game.service.MiniGameOrchestrator;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.EmitterProcessor;
@@ -53,7 +54,19 @@ public class VisitEventStreamConfig {
                                                         .playerId(visitEventMessage.getPlayerId())
                                                         .type(MessageType.EVENT_NOT_FOUND)
                                                         .payload(MiniGame.builder().id(visitEventMessage.getPayload().getValue()).build())
-                                                        .build())))
-                        .doOnError(throwable -> log.error(throwable.getMessage(), throwable));
+                                                        .build()))
+                                        .onErrorResume(throwable ->
+                                                this.defaultResponse(throwable, visitEventMessage.getPlayerId()))
+                        );
+    }
+
+    private Mono<Message<MiniGame>> defaultResponse(Throwable throwable, String playerId) {
+        log.error(throwable.getMessage(), throwable);
+        return Mono.just(
+                Message.<MiniGame>builder()
+                        .playerId(playerId)
+                        .type(MessageType.ERROR)
+                        .payload(MiniGame.builder().id(MDC.get("X-B3-TraceId")).build())
+                        .build());
     }
 }

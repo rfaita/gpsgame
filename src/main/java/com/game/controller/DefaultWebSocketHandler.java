@@ -99,6 +99,10 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
                 replyMessageService.getProcessor()
                         .filter(message -> getPlayerId(session).equals(message.getPlayerId()))
                         .log(DefaultWebSocketHandler.class.getName() + ".out")
+                        .onErrorResume(throwable ->
+                                Mono.just(Message.<String>builder()
+                                        .payload(throwable.getMessage())
+                                        .build()))
                         .doOnError(throwable -> log.error(throwable.getMessage(), throwable))
                         .map(this::parseMessageToString)
                         .map(session::textMessage)

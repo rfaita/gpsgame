@@ -1,8 +1,6 @@
 package com.game.model.minigame;
 
-import com.game.model.Creature;
 import com.game.model.Player;
-import com.game.model.Survivor;
 import com.game.model.action.ActionType;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +24,7 @@ public class MiniGameState {
     @Getter
     public static class Room {
         private String id;
+
     }
 
     @Builder
@@ -40,4 +39,58 @@ public class MiniGameState {
         private String id;
         private ActionType type;
     }
+
+    @Builder
+    @Getter
+    public static class Creature {
+        private String id;
+        private String name;
+        private Integer moveSpeed;
+        private Integer distance;
+
+        private Integer hpHead;
+        private Integer hpBody;
+        private Integer hpArms;
+        private Integer hpLegs;
+
+        private Boolean burning;
+        private Boolean headFractured;
+        private Boolean bodyFractured;
+        private Boolean armsFractured;
+        private Boolean legsFractured;
+
+        private Boolean knockDown;
+
+        public Creature move() {
+            if (this.distance - this.moveSpeed <= 0) {
+                this.distance = 0;
+            } else {
+                this.distance -= this.moveSpeed;
+            }
+            return this;
+        }
+
+
+    }
+
+    @Builder
+    @Getter
+    public static class Survivor {
+        private String id;
+        private String name;
+        private Integer moveSpeed;
+        private Integer distance;
+
+        private Integer hpHead;
+        private Integer hpBody;
+        private Integer hpArms;
+        private Integer hpLegs;
+
+        private Boolean burning;
+        private Boolean headFractured;
+        private Boolean bodyFractured;
+        private Boolean armsFractured;
+        private Boolean legsFractured;
+    }
+
 }

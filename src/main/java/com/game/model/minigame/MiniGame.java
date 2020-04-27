@@ -10,6 +10,7 @@ import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ public class MiniGame {
 
     @Id
     private String id;
+    private String playerId;
     private EventGenerated eventGenerated;
 
     private MiniGameState currentState;
@@ -56,6 +58,8 @@ public class MiniGame {
 
     public MiniGame start(final Player player) {
 
+        this.playerId = player.getId();
+
         MiniGameState.Situation nextSituation = this.eventGenerated.getFirstSituation()
                 .toSituation()
                 .toMiniGameStateSituation();
@@ -78,6 +82,82 @@ public class MiniGame {
                         .build());
 
         return this.currentState.getLastAction().getType().runAllExecutors(this);
+    }
+
+    public void moveCreatures() {
+
+        List<MiniGameState.Creature> creatures =
+                this.currentState.getCurrentCreatures().stream()
+                        .map(creature -> creature.move())
+                        .collect(Collectors.toList());
+
+        this.changeCurrentState(
+                this.currentState.toBuilder()
+                        .currentCreatures(creatures)
+                        .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build());
+    }
+
+    public Player currentPlayerState() {
+        //TODO: return only a COPY of player
+        return this.currentState.getPlayer();
+    }
+
+    public void damagePlayer(Integer damage) {
+
+        Player player = this.currentPlayerState();
+
+        player.damage(damage);
+
+        this.changeCurrentState(
+                this.currentState.toBuilder()
+                        .player(player)
+                        .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build()
+        );
+    }
+
+    public void damageClosiestEnemy(Integer damage) {
+
+        //dmg to enemy
+
+        MiniGameState.Creature creature =
+                this.currentState.getCurrentCreatures().stream()
+                        .sorted(Comparator.comparing(MiniGameState.Creature::getDistance))
+                        .findFirst()
+                        .get();
+
+
+        //remover the creature from current creatures and generate a new state with that
+//        if (morreu) {
+//            removeClosiestEnemy();
+//        }
+
+        this.changeCurrentState(
+                this.currentState.toBuilder()
+                        //.currentCreatures(creatures)
+                        .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build()
+        );
+
+    }
+
+    public void spawnEnemy() {
+
+        this.changeCurrentState(
+                this.currentState.toBuilder()
+                        .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build());
+
+    }
+
+    public void spawnEnemyBehind() {
+
+        this.changeCurrentState(
+                this.currentState.toBuilder()
+                        .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build());
+
     }
 
     public void createNewRoomByPlace() {
@@ -118,5 +198,6 @@ public class MiniGame {
                 .filter(action -> action.getType().runAllVerifiers(MiniGame.this))
                 .collect(Collectors.toList());
     }
+
 
 }

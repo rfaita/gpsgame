@@ -6,6 +6,8 @@ public enum MessageType {
     VISIT_EVENT,
     EXECUTE_ACTION_EVENT,
 
+    ERROR,
+
     EVENT_NOT_FOUND,
     ACTION_NOT_FOUND,
 

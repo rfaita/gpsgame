@@ -1,7 +1,8 @@
 package com.game.model.action;
 
-import com.game.model.action.executor.NoOpExecutor;
+import com.game.model.action.executor.AttackClosiestEnemyExecutor;
 import com.game.model.action.executor.NextRoomExecutor;
+import com.game.model.action.executor.NoOpExecutor;
 import com.game.model.action.verifier.NoOpVerifier;
 import com.game.model.minigame.MiniGame;
 
@@ -10,7 +11,8 @@ import java.util.List;
 public enum ActionType {
 
     NO_OP(new NoOpVerifier(), new NoOpExecutor()),
-    NEXT_ROOM(new NoOpVerifier(), new NextRoomExecutor());
+    NEXT_ROOM(new NoOpVerifier(), new NextRoomExecutor()),
+    ATTACK_CLOSIEST_CREATURE(new NoOpVerifier(), new AttackClosiestEnemyExecutor());
 
     private final List<ActionVerifier> actionVerifiers;
     private final List<ActionExecutor> actionExecutors;

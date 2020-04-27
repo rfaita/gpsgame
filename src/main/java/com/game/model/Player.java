@@ -16,4 +16,7 @@ public class Player {
 
     @Id
     private String id;
+
+    public void damage(Integer damage) {
+    }
 }

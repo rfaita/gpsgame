@@ -6,7 +6,6 @@ import com.game.repository.RoomRepository;
 import com.game.repository.SituationRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 

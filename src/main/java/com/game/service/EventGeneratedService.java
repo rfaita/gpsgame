@@ -1,5 +1,6 @@
 package com.game.service;
 
+import com.game.exception.GenericException;
 import com.game.model.EventGenerated;
 import com.game.model.type.SituationType;
 import com.game.repository.EventGeneratedRepository;
@@ -10,6 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import static com.game.exception.ExceptionMessageConstant.RANDOM_PLACE_NOT_FOUND;
+import static com.game.exception.ExceptionMessageConstant.RANDOM_SITUATION_NOT_FOUND;
 
 @Service
 @AllArgsConstructor
@@ -38,8 +42,10 @@ public class EventGeneratedService {
     private Mono<EventGenerated> generate(final String id) {
 
         return placeRepository.findByRandom()
+                .switchIfEmpty(Mono.error(GenericException.of(RANDOM_PLACE_NOT_FOUND)))
                 .flatMap(place ->
                         situationRepository.findByUsedInPlacesAndTypeAndRandom(place.getId(), SituationType.FIRST)
+                                .switchIfEmpty(Mono.error(GenericException.of(RANDOM_SITUATION_NOT_FOUND, place.getId())))
                                 .map(situation ->
                                         EventGenerated.builder()
                                                 .id(id)

@@ -1,18 +1,17 @@
 package com.game.service;
 
+import com.game.exception.GenericException;
 import com.game.model.EventGenerated;
 import com.game.model.minigame.MiniGame;
-import com.game.model.minigame.MiniGameDataCache;
-import com.game.repository.ActionRepository;
 import com.game.repository.MiniGameRepository;
-import com.game.repository.RoomRepository;
-import com.game.repository.SituationRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
+
+import static com.game.exception.ExceptionMessageConstant.MINI_GAME_NOT_FOUND;
+import static com.game.exception.ExceptionMessageConstant.PLAYER_ACCESS_NOT_PERMITTED_GAME;
 
 @Service
 @AllArgsConstructor
@@ -46,8 +45,10 @@ public class MiniGameOrchestrator {
                 .flatMap(this::saveMiniGameState);
     }
 
-    public Mono<MiniGame> executeAction(String miniGameId, String actionId) {
+    public Mono<MiniGame> executeAction(String playerId, String miniGameId, String actionId) {
         return this.loadMiniGameState(miniGameId)
+                .filter(miniGame -> miniGame.getPlayerId().equals(playerId))
+                .switchIfEmpty(Mono.error(() -> GenericException.of(PLAYER_ACCESS_NOT_PERMITTED_GAME, playerId, miniGameId)))
                 .map(miniGame -> miniGame.executeAction(actionId))
                 .flatMap(this::saveMiniGameState);
     }
@@ -58,6 +59,7 @@ public class MiniGameOrchestrator {
 
     private Mono<MiniGame> loadMiniGameState(String miniGameId) {
         return this.miniGameRepository.findById(miniGameId)
+                .switchIfEmpty(Mono.error(GenericException.of(MINI_GAME_NOT_FOUND, miniGameId)))
                 .flatMap(miniGame -> this.miniGameDataCacheService.load()
                         .map(miniGameDataCache -> miniGame.dataCache(miniGameDataCache))
                 );
