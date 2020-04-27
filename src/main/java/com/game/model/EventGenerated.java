@@ -27,7 +27,6 @@ public class EventGenerated {
     @NoArgsConstructor
     public static class Place {
         private String id;
-        private String name;
         private String description;
         private Integer size;
         private PlaceType type;

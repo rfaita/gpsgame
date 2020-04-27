@@ -49,6 +49,11 @@ public class MiniGame {
         return this;
     }
 
+    public MiniGame clearStateHistory() {
+        this.stateHistory = null;
+        return this;
+    }
+
     public MiniGame start(final Player player) {
 
         MiniGameState.Situation nextSituation = this.eventGenerated.getFirstSituation()

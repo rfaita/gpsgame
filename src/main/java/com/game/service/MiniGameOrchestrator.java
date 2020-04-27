@@ -68,7 +68,8 @@ public class MiniGameOrchestrator {
     private Mono<MiniGame> saveMiniGameState(MiniGame miniGame) {
         return Mono.just(miniGame)
                 .map(MiniGame::clearDataCache)
-                .flatMap(this.miniGameRepository::save);
+                .flatMap(this.miniGameRepository::save)
+                .map(MiniGame::clearStateHistory);
     }
 
 }

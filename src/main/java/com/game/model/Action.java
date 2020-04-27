@@ -23,9 +23,6 @@ public class Action {
     private ActionType type;
     private List<String> usedInSituations;
 
-    private List<String> possibleRoomsId;
-    private List<String> possibleSituationsId;
-
     public MiniGameState.Action toMiniGameStateAction() {
         return MiniGameState.Action.builder()
                 .id(this.getId())

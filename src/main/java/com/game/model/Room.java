@@ -19,14 +19,12 @@ public class Room {
 
     @Id
     private String id;
-    private String name;
     private List<String> usedInPlaces;
 
 
     public MiniGameState.Room toMiniGameStateRoom() {
         return MiniGameState.Room.builder()
                 .id(this.getId())
-                .name(this.getName())
                 .build();
     }
 

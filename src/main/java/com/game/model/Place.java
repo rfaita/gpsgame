@@ -18,14 +18,12 @@ public class Place {
 
     @Id
     private String id;
-    private String name;
     private Integer size;
     private PlaceType type;
 
     public EventGenerated.Place toEventGeneratedPlace() {
         return EventGenerated.Place.builder()
                 .id(this.getId())
-                .name(this.getName())
                 .size(this.getSize())
                 .type(this.getType())
                 .build();

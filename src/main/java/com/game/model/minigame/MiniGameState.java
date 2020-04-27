@@ -26,7 +26,6 @@ public class MiniGameState {
     @Getter
     public static class Room {
         private String id;
-        private String name;
     }
 
     @Builder
