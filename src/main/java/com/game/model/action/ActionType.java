@@ -10,8 +10,8 @@ public enum ActionType {
 
     NO_OP(new NoOpVerifier(), new NoOpExecutor()),
     NEXT_ROOM(new NoOpVerifier(), new NextRoomExecutor()),
-    PUSH_ALL_CREATURE(new NoOpVerifier(), List.of(new PushAllClosiestEnemyExecutor(), new CreaturesTurnExecutor())),
-    ATTACK_CLOSIEST_CREATURE(new NoOpVerifier(), List.of(new AttackEnemyExecutor(), new EnemiesSpawnExecutor(), new CreaturesTurnExecutor()));
+    PUSH_ALL_CREATURES(new NoOpVerifier(), List.of(new PushAllEnemyExecutor(), new CreaturesTurnExecutor())),
+    ATTACK_CLOSER_CREATURE(new NoOpVerifier(), List.of(new AttackEnemyExecutor(), new EnemiesSpawnExecutor(), new CreaturesTurnExecutor()));
 
     private final List<ActionVerifier> actionVerifiers;
     private final List<ActionExecutor> actionExecutors;

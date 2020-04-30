@@ -154,7 +154,15 @@ public class MiniGameState {
 
         public Creature attackIfPossible(Player player) {
 
-            ActionResult actionResult = null;
+            if (this.knockedDown > 0) {
+                this.knockedDown--;
+                if (this.knockedDown == 0) {
+                    this.notifyActionResult(ActionResult.builder()
+                            .type(ActionResultType.ENEMY_WAKE_UP)
+                            .args(List.of(this.name))
+                            .build());
+                }
+            }
 
             if (this.distance == 0 && this.knockedDown == 0) {
                 if (RandomUtil.randomPercentage() > 50) {
@@ -163,33 +171,23 @@ public class MiniGameState {
 
                     player.damage(dmg);
 
-                    actionResult = ActionResult.builder()
+                    this.notifyActionResult(ActionResult.builder()
                             .type(ActionResultType.ENEMY_ATTACK_PLAYER)
                             .args(List.of(this.name, String.valueOf(dmg)))
-                            .build();
+                            .build());
                 } else {
-                    actionResult = ActionResult.builder()
+                    this.notifyActionResult(ActionResult.builder()
                             .type(ActionResultType.ENEMY_MISS_ATTACK)
                             .args(List.of(this.name))
-                            .build();
+                            .build());
                 }
-            } else if (this.knockedDown > 0) {
-                this.knockedDown--;
-                actionResult = ActionResult.builder()
-                        .type(ActionResultType.ENEMY_WAKE_UP)
-                        .args(List.of(this.name))
-                        .build();
-            }
-
-            if (actionResult != null) {
-                this.notifyActionResult(actionResult);
             }
 
             return this;
         }
 
         public Creature knockedDown() {
-            if (this.knockedDown == 0) {
+            if (this.distance == 0 && this.knockedDown == 0) {
                 this.knockedDown = 2;//the current turn and the next one
 
                 this.notifyActionResult(ActionResult.builder()

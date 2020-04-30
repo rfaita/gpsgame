@@ -13,4 +13,6 @@ SITUATION;car_crashed_at_door;FIRST;0;4;police_station,hospital;;;
 SITUATION;horde_at_door;FIRST;0;3;small_house,small_apt_block,police_station,hospital;weapon_room,entrance,balcony;;
 SITUATION;normal;FIRST;0;3;small_house,small_apt_block,police_station,hospital;room,weapon_room,entrance,kitchen,tv_room,balcony;;
 ACTION;next_room;NEXT_ROOM;on_fire,car_crashed_at_door,horde_at_door,normal;
-CREATURE;zombie;Zombie;MEDIUM;
+ACTION;push_all_creatures;PUSH_ALL_CREATURES;on_fire,car_crashed_at_door,horde_at_door,normal;
+CREATURE;zombie;Zombie;MEDIUM;1;100;100;100;100;100;
+CREATURE;hunter;Hunter;MEDIUM;2;110;110;110;110;110;

@@ -4,8 +4,8 @@ message to track gps:
 
 message to visit event:
 
-{"type":"VISIT_EVENT", "payload":{"value":"7000fe06-c694-42e2-9cf5-01baf2485a53"}}
+{"type":"VISIT_EVENT", "payload":{"value":"73aea8c9-ccbd-4718-8fc2-e693f9dab835"}}
 
 message to execute action on event: 
 
-{"type":"EXECUTE_ACTION_EVENT", "payload":{"miniGameId":"fade8e47-605c-42dd-94ab-fc1f97c5da30", "actionId":"next_room"}}
+{"type":"EXECUTE_ACTION_EVENT", "payload":{"miniGameId":"0bc2556f-13ae-41d6-867d-c0c55c816673", "actionId":"push_all_creatures"}}

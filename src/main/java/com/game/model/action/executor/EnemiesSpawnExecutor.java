@@ -14,7 +14,7 @@ public class EnemiesSpawnExecutor implements ActionExecutor {
 
         NoiseLevel weaponNoiseLevel = NoiseLevel.LOW;//player.getMainWeapon().getNoiseLevel();
 
-        if (RandomUtil.random(4) < weaponNoiseLevel.getSound()) {
+        if (RandomUtil.random(NoiseLevel.VERY_HIGH.getSound() + 1) < weaponNoiseLevel.getSound()) {
             miniGame.spawnEnemy();
         }
 
