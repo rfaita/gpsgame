@@ -5,6 +5,7 @@ import com.game.dto.ExecuteActionMessage;
 import com.game.dto.Message;
 import com.game.dto.MessageType;
 import com.game.model.minigame.MiniGame;
+import com.game.model.minigame.representation.MiniGameRepresentation;
 import com.game.service.MiniGameOrchestrator;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -33,7 +34,7 @@ public class ExecuteActionStreamConfig {
     }
 
     @Bean
-    public Function<Flux<ExecuteActionMessage>, Flux<Message<MiniGame>>> executeAction(final MiniGameOrchestrator service) {
+    public Function<Flux<ExecuteActionMessage>, Flux<Message<MiniGameRepresentation>>> executeAction(final MiniGameOrchestrator service) {
 
         return executeAction ->
                 executeAction
@@ -44,7 +45,7 @@ public class ExecuteActionStreamConfig {
                                         executeActionMessage.getPayload().getMiniGameId(),
                                         executeActionMessage.getPayload().getActionId())
                                         .map(miniGame ->
-                                                Message.<MiniGame>builder()
+                                                Message.<MiniGameRepresentation>builder()
                                                         .playerId(executeActionMessage.getPlayerId())
                                                         .type(MessageType.UPDATE_EVENT)
                                                         .payload(miniGame)
@@ -54,13 +55,13 @@ public class ExecuteActionStreamConfig {
                         );
     }
 
-    private Mono<Message<MiniGame>> defaultResponse(Throwable throwable, String playerId) {
+    private Mono<Message<MiniGameRepresentation>> defaultResponse(Throwable throwable, String playerId) {
         log.error(throwable.getMessage(), throwable);
         return Mono.just(
-                Message.<MiniGame>builder()
+                Message.<MiniGameRepresentation>builder()
                         .playerId(playerId)
                         .type(MessageType.ERROR)
-                        .payload(MiniGame.builder().id(MDC.get("X-B3-TraceId")).build())
+                        .payload(MiniGameRepresentation.builder().id(MDC.get("X-B3-TraceId")).build())
                         .build());
     }
 

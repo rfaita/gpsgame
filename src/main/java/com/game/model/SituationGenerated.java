@@ -17,6 +17,5 @@ public class SituationGenerated {
     private String id;
     private String description;
     private SituationType type;
-    private List<Survivor> survivors;
-    private List<Creature> creatures;
+
 }

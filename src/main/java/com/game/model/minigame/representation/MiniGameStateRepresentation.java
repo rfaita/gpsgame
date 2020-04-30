@@ -1,12 +1,13 @@
-package com.game.model.minigame;
+package com.game.model.minigame.representation;
 
 import com.game.model.Player;
 import com.game.model.action.ActionType;
-import com.game.model.minigame.representation.MiniGameStateRepresentation;
+import com.game.model.minigame.MiniGameState;
 import com.game.model.type.ActionResultType;
 import com.game.util.RandomUtil;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.data.annotation.Transient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 @Builder(toBuilder = true)
 @Getter
-public class MiniGameState {
+public class MiniGameStateRepresentation {
 
     private Player player;
     private Action lastAction;
@@ -24,8 +25,8 @@ public class MiniGameState {
     private List<Action> currentActions;
     private List<Creature> currentCreatures;
 
-    public MiniGameStateRepresentation toMiniGameStateRepresentation() {
-        return MiniGameStateRepresentation.builder()
+    public MiniGameState toMiniGameState() {
+        return MiniGameState.builder()
                 .player(this.getPlayer())
                 .lastAction(this.getLastAction() != null ? this.getLastAction().toAction() : null)
                 .lastActionResults(this.getLastActionResults() != null ? this.getLastActionResults().stream()
@@ -42,17 +43,13 @@ public class MiniGameState {
                 .build();
     }
 
-    public interface Observer {
-        void handleActionResult(ActionResult actionResult);
-    }
-
     @Builder
     @Getter
     public static class Room {
         private String id;
 
-        public MiniGameStateRepresentation.Room toRoom() {
-            return MiniGameStateRepresentation.Room.builder()
+        public MiniGameState.Room toRoom() {
+            return MiniGameState.Room.builder()
                     .id(this.getId())
                     .build();
         }
@@ -65,8 +62,8 @@ public class MiniGameState {
         private String id;
         private Integer maxCreatures;
 
-        public MiniGameStateRepresentation.Situation toSituation() {
-            return MiniGameStateRepresentation.Situation.builder()
+        public MiniGameState.Situation toSituation() {
+            return MiniGameState.Situation.builder()
                     .id(this.getId())
                     .maxCreatures(this.getMaxCreatures())
                     .build();
@@ -79,8 +76,8 @@ public class MiniGameState {
         private String id;
         private ActionType type;
 
-        public MiniGameStateRepresentation.Action toAction() {
-            return MiniGameStateRepresentation.Action.builder()
+        public MiniGameState.Action toAction() {
+            return MiniGameState.Action.builder()
                     .id(this.getId())
                     .type(this.getType())
                     .build();
@@ -93,8 +90,8 @@ public class MiniGameState {
         private ActionResultType type;
         private List<String> args;
 
-        public MiniGameStateRepresentation.ActionResult toActionResult() {
-            return MiniGameStateRepresentation.ActionResult.builder()
+        public MiniGameState.ActionResult toActionResult() {
+            return MiniGameState.ActionResult.builder()
                     .type(this.getType())
                     .args(this.getArgs())
                     .build();
@@ -123,85 +120,8 @@ public class MiniGameState {
 
         private Integer knockedDown;
 
-        private List<Observer> observers;
-
-        public void addObserver(Observer observer) {
-            if (this.observers == null) {
-                this.observers = new ArrayList<>(1);
-            }
-            this.observers.add(observer);
-        }
-
-        private void notifyActionResult(final ActionResult actionResult) {
-            if (this.observers != null) {
-                this.observers.stream().forEach(observer -> observer.handleActionResult(actionResult));
-            }
-        }
-
-        public Creature move() {
-            if (this.distance - this.moveSpeed <= 0) {
-                this.distance = 0;
-
-                this.notifyActionResult(ActionResult.builder()
-                        .type(ActionResultType.ENEMY_CLOSE)
-                        .args(List.of(this.name))
-                        .build());
-            } else {
-                this.distance -= this.moveSpeed;
-            }
-            return this;
-        }
-
-        public Creature attackIfPossible(Player player) {
-
-            ActionResult actionResult = null;
-
-            if (this.distance == 0 && this.knockedDown == 0) {
-                if (RandomUtil.randomPercentage() > 50) {
-                    //do dmg to player
-                    Integer dmg = 1;
-
-                    player.damage(dmg);
-
-                    actionResult = ActionResult.builder()
-                            .type(ActionResultType.ENEMY_ATTACK_PLAYER)
-                            .args(List.of(this.name, String.valueOf(dmg)))
-                            .build();
-                } else {
-                    actionResult = ActionResult.builder()
-                            .type(ActionResultType.ENEMY_MISS_ATTACK)
-                            .args(List.of(this.name))
-                            .build();
-                }
-            } else if (this.knockedDown > 0) {
-                this.knockedDown--;
-                actionResult = ActionResult.builder()
-                        .type(ActionResultType.ENEMY_WAKE_UP)
-                        .args(List.of(this.name))
-                        .build();
-            }
-
-            if (actionResult != null) {
-                this.notifyActionResult(actionResult);
-            }
-
-            return this;
-        }
-
-        public Creature knockedDown() {
-            if (this.knockedDown == 0) {
-                this.knockedDown = 2;//the current turn and the next one
-
-                this.notifyActionResult(ActionResult.builder()
-                        .type(ActionResultType.ENEMY_KNOCKED_DOWN)
-                        .args(List.of(this.name))
-                        .build());
-            }
-            return this;
-        }
-
-        public MiniGameStateRepresentation.Creature toCreature() {
-            return MiniGameStateRepresentation.Creature.builder()
+        public MiniGameState.Creature toCreature() {
+            return MiniGameState.Creature.builder()
                     .id(this.getId())
                     .name(this.getName())
                     .moveSpeed(this.getMoveSpeed())
@@ -218,7 +138,6 @@ public class MiniGameState {
                     .knockedDown(this.getKnockedDown())
                     .build();
         }
-
 
     }
 

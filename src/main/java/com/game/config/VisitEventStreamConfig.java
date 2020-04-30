@@ -5,6 +5,7 @@ import com.game.dto.Message;
 import com.game.dto.MessageType;
 import com.game.dto.VisitEventMessage;
 import com.game.model.minigame.MiniGame;
+import com.game.model.minigame.representation.MiniGameRepresentation;
 import com.game.service.EventGeneratedService;
 import com.game.service.MiniGameOrchestrator;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +35,8 @@ public class VisitEventStreamConfig {
     }
 
     @Bean
-    public Function<Flux<VisitEventMessage>, Flux<Message<MiniGame>>> visitEvent(final EventGeneratedService service,
-                                                                                 final MiniGameOrchestrator miniGameOrchestrator) {
+    public Function<Flux<VisitEventMessage>, Flux<Message<MiniGameRepresentation>>> visitEvent(final EventGeneratedService service,
+                                                                                               final MiniGameOrchestrator miniGameOrchestrator) {
 
         return visitEvent ->
                 visitEvent
@@ -44,29 +45,29 @@ public class VisitEventStreamConfig {
                                 service.visit(visitEventMessage.getPayload().getValue())
                                         .flatMap(eventGenerated -> miniGameOrchestrator.start(visitEventMessage.getPlayerId(), eventGenerated))
                                         .map(miniGame ->
-                                                Message.<MiniGame>builder()
+                                                Message.<MiniGameRepresentation>builder()
                                                         .playerId(visitEventMessage.getPlayerId())
                                                         .type(MessageType.START_EVENT)
                                                         .payload(miniGame)
                                                         .build())
                                         .switchIfEmpty(
-                                                Mono.just(Message.<MiniGame>builder()
+                                                Mono.just(Message.<MiniGameRepresentation>builder()
                                                         .playerId(visitEventMessage.getPlayerId())
                                                         .type(MessageType.EVENT_NOT_FOUND)
-                                                        .payload(MiniGame.builder().id(visitEventMessage.getPayload().getValue()).build())
+                                                        .payload(MiniGameRepresentation.builder().id(visitEventMessage.getPayload().getValue()).build())
                                                         .build()))
                                         .onErrorResume(throwable ->
                                                 this.defaultResponse(throwable, visitEventMessage.getPlayerId()))
                         );
     }
 
-    private Mono<Message<MiniGame>> defaultResponse(Throwable throwable, String playerId) {
+    private Mono<Message<MiniGameRepresentation>> defaultResponse(Throwable throwable, String playerId) {
         log.error(throwable.getMessage(), throwable);
         return Mono.just(
-                Message.<MiniGame>builder()
+                Message.<MiniGameRepresentation>builder()
                         .playerId(playerId)
                         .type(MessageType.ERROR)
-                        .payload(MiniGame.builder().id(MDC.get("X-B3-TraceId")).build())
+                        .payload(MiniGameRepresentation.builder().id(MDC.get("X-B3-TraceId")).build())
                         .build());
     }
 }

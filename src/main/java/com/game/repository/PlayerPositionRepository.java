@@ -19,4 +19,15 @@ public class PlayerPositionRepository {
         Point point = new Point(playerPosition.getLat(), playerPosition.getLon());
         return this.redisTemplate.opsForGeo().add(KEY_PLAYER_NAME, point, playerPosition.getId());
     }
+
+
+    public Mono<PlayerPosition> findById(String id) {
+        return this.redisTemplate.opsForGeo().position(KEY_PLAYER_NAME, id)
+                .map(point -> PlayerPosition.builder()
+                        .id(id)
+                        .lat(point.getX())
+                        .lon(point.getY())
+                        .build());
+    }
+
 }

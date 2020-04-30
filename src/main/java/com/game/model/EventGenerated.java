@@ -38,13 +38,14 @@ public class EventGenerated {
     @NoArgsConstructor
     public static class Situation {
         private String id;
-        private String description;
+        private Integer maxCreatures;
         private SituationType type;
 
         public com.game.model.Situation toSituation() {
             return com.game.model.Situation.builder()
                     .id(this.getId())
                     .type(this.getType())
+                    .maxCreatures(this.getMaxCreatures())
                     .build();
 
         }

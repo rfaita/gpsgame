@@ -15,7 +15,6 @@ public class MiniGameDataCache {
     private List<Action> allActions;
     private List<Item> allItems;
     private List<Creature> allCreatures;
-    private List<Survivor> allSurvivor;
 
     public MiniGameState.Room getRandomRoomByPlaceId(String placeId) {
         return this.allRooms.stream()
@@ -43,6 +42,16 @@ public class MiniGameDataCache {
                 .map(Situation::toMiniGameStateSituation)
                 .get();
     }
+
+    public MiniGameState.Creature getRandomCreatureByDifficult(MiniGameDifficult difficult) {
+        return this.allCreatures.stream()
+                .filter(creature -> creature.getDifficult().equals(difficult))
+                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+                .findAny()
+                .map(Creature::toMiniGameStateCreature)
+                .get();
+    }
+
 
     public Situation getRandomSituationBySituationId(String situationId) {
         return this.allSituations.stream()

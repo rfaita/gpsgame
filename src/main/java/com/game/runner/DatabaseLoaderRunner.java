@@ -2,6 +2,7 @@ package com.game.runner;
 
 import com.game.model.*;
 import com.game.model.action.ActionType;
+import com.game.model.minigame.MiniGameDifficult;
 import com.game.model.type.PlaceType;
 import com.game.model.type.SituationType;
 import com.game.repository.*;
@@ -27,6 +28,7 @@ public class DatabaseLoaderRunner implements CommandLineRunner {
     private final SituationRepository situationRepository;
     private final RoomRepository roomRepository;
     private final ActionRepository actionRepository;
+    private final CreatureRepository creatureRepository;
 
     private List<String> listOfObject(Object o) {
         if (o != null) {
@@ -84,7 +86,7 @@ public class DatabaseLoaderRunner implements CommandLineRunner {
                                         .id((String) field.get(1))
                                         .type(SituationType.valueOf((String) field.get(2)))
                                         .maxSurvivors(Integer.valueOf((String) field.get(3)))
-                                        .maxZombies(Integer.valueOf((String) field.get(4)))
+                                        .maxCreatures(Integer.valueOf((String) field.get(4)))
                                         .usedInPlaces(listOfObject(field.get(5)))
                                         .usedInRooms(listOfObject(field.get(6)))
                                         .usedInSituations(listOfObject(field.get(7)))
@@ -115,6 +117,25 @@ public class DatabaseLoaderRunner implements CommandLineRunner {
                 .subscribe(place -> log.info("#### Saved actions: {}", place));
     }
 
+    private void saveCreaturesFromCsv(List<List<String>> data) {
+        this.creatureRepository.deleteAll()
+                .then(
+                        Flux.just(data.stream()
+                                .filter(line -> "CREATURE".equalsIgnoreCase(line.get(0)))
+                                .collect(Collectors.toList())
+                                .toArray())
+                                .cast(List.class)
+                                .map(field -> Creature.builder()
+                                        .id((String) field.get(1))
+                                        .name((String) field.get(2))
+                                        .difficult(MiniGameDifficult.valueOf((String) field.get(3)))
+                                        .build())
+                                .collectList()
+                                .flatMap(obj -> this.creatureRepository.saveAll(obj).collectList())
+                )
+                .subscribe(place -> log.info("#### Saved creatures: {}", place));
+    }
+
     @Override
     public void run(String... args) throws Exception {
 
@@ -138,6 +159,7 @@ public class DatabaseLoaderRunner implements CommandLineRunner {
         this.saveRoomsFromCsv(data);
         this.saveSituationsFromCsv(data);
         this.saveActionsFromCsv(data);
+        this.saveCreaturesFromCsv(data);
 
 
     }

@@ -18,4 +18,6 @@ public class PlayerPositionService {
         log.info("Saving: {}", playerPosition);
         return this.repository.save(playerPosition);
     }
+
+
 }

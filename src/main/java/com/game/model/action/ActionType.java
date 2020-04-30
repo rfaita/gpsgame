@@ -1,8 +1,6 @@
 package com.game.model.action;
 
-import com.game.model.action.executor.AttackClosiestEnemyExecutor;
-import com.game.model.action.executor.NextRoomExecutor;
-import com.game.model.action.executor.NoOpExecutor;
+import com.game.model.action.executor.*;
 import com.game.model.action.verifier.NoOpVerifier;
 import com.game.model.minigame.MiniGame;
 
@@ -12,7 +10,8 @@ public enum ActionType {
 
     NO_OP(new NoOpVerifier(), new NoOpExecutor()),
     NEXT_ROOM(new NoOpVerifier(), new NextRoomExecutor()),
-    ATTACK_CLOSIEST_CREATURE(new NoOpVerifier(), new AttackClosiestEnemyExecutor());
+    PUSH_ALL_CREATURE(new NoOpVerifier(), List.of(new PushAllClosiestEnemyExecutor(), new CreaturesTurnExecutor())),
+    ATTACK_CLOSIEST_CREATURE(new NoOpVerifier(), List.of(new AttackEnemyExecutor(), new EnemiesSpawnExecutor(), new CreaturesTurnExecutor()));
 
     private final List<ActionVerifier> actionVerifiers;
     private final List<ActionExecutor> actionExecutors;
@@ -20,6 +19,11 @@ public enum ActionType {
     ActionType(ActionVerifier actionVerifier, ActionExecutor actionExecutor) {
         this.actionVerifiers = List.of(actionVerifier);
         this.actionExecutors = List.of(actionExecutor);
+    }
+
+    ActionType(ActionVerifier actionVerifier, List<ActionExecutor> actionExecutors) {
+        this.actionVerifiers = List.of(actionVerifier);
+        this.actionExecutors = actionExecutors;
     }
 
     ActionType(List<ActionVerifier> actionVerifiers, List<ActionExecutor> actionExecutors) {

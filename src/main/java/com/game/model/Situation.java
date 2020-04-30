@@ -25,11 +25,12 @@ public class Situation {
     private List<String> usedInRooms;
     private List<String> usedInSituations;
     private Integer maxSurvivors;
-    private Integer maxZombies;
+    private Integer maxCreatures;
 
     public EventGenerated.Situation toEventGeneratedSituation() {
         return EventGenerated.Situation.builder()
                 .id(this.getId())
+                .maxCreatures(this.getMaxCreatures())
                 .type(this.getType())
                 .build();
 
@@ -38,6 +39,7 @@ public class Situation {
     public MiniGameState.Situation toMiniGameStateSituation() {
         return MiniGameState.Situation.builder()
                 .id(this.getId())
+                .maxCreatures(this.getMaxCreatures())
                 .build();
     }
 }

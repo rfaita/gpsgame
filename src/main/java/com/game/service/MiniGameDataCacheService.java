@@ -2,6 +2,7 @@ package com.game.service;
 
 import com.game.model.minigame.MiniGameDataCache;
 import com.game.repository.ActionRepository;
+import com.game.repository.CreatureRepository;
 import com.game.repository.RoomRepository;
 import com.game.repository.SituationRepository;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ public class MiniGameDataCacheService {
     private final ActionRepository actionRepository;
     private final SituationRepository situationRepository;
     private final RoomRepository roomRepository;
+    private final CreatureRepository creatureRepository;
 
     private final CacheManager cacheManager;
 
@@ -34,6 +36,8 @@ public class MiniGameDataCacheService {
                                         (miniGameDataCacheBuilder, situations) -> miniGameDataCacheBuilder.allSituations(situations))
                                 .zipWith(this.actionRepository.findAll().collectList(),
                                         (miniGameDataCacheBuilder, actions) -> miniGameDataCacheBuilder.allActions(actions))
+                                .zipWith(this.creatureRepository.findAll().collectList(),
+                                        (miniGameDataCacheBuilder, creatures) -> miniGameDataCacheBuilder.allCreatures(creatures))
                                 .map(miniGameDataCacheBuilder -> miniGameDataCacheBuilder.build())
                                 .map(miniGameDataCache -> {
                                     cacheManager.getCache(MINI_GAME_DATA_CACHE_NAME).put("all", miniGameDataCache);
