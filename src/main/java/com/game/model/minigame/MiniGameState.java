@@ -4,6 +4,7 @@ import com.game.model.Player;
 import com.game.model.action.ActionType;
 import com.game.model.minigame.representation.MiniGameStateRepresentation;
 import com.game.model.type.ActionResultType;
+import com.game.util.ListUtil;
 import com.game.util.RandomUtil;
 import lombok.Builder;
 import lombok.Getter;
@@ -40,6 +41,18 @@ public class MiniGameState {
                         .map(Creature::toCreature)
                         .collect(Collectors.toList()) : null)
                 .build();
+    }
+
+    public MiniGameState merge(MiniGameState miniGameState) {
+        this.player = miniGameState.getPlayer();
+        this.lastAction = miniGameState.getLastAction();
+        this.lastActionResults = ListUtil.concat(this.lastActionResults, miniGameState.getLastActionResults());
+        this.currentRoom = miniGameState.getCurrentRoom();
+        this.currentSituation = miniGameState.getCurrentSituation();
+        this.currentActions = miniGameState.getCurrentActions();
+        this.currentCreatures = miniGameState.getCurrentCreatures();
+
+        return this;
     }
 
     public interface Observer {

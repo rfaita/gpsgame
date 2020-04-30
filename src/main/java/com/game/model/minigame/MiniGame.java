@@ -1,5 +1,6 @@
 package com.game.model.minigame;
 
+import com.game.model.Action;
 import com.game.model.EventGenerated;
 import com.game.model.Player;
 import com.game.model.Situation;
@@ -28,6 +29,8 @@ public class MiniGame {
 
     private MiniGameDataCache dataCache;
 
+    private List<MiniGameState> tempStates;
+
     private List<MiniGameState> stateHistory;
 
     private List<MiniGameState.ActionResult> actionResultsCache;
@@ -38,11 +41,19 @@ public class MiniGame {
         }
     }
 
-    private void changeCurrentState(MiniGameState.MiniGameStateBuilder miniGameStateBuilder) {
+    private MiniGame changeCurrentState() {
         this.saveCurrentState();
-        this.currentState = miniGameStateBuilder
+        this.currentState = this.tempStates.stream().reduce(MiniGameState::merge).get();
+        return this;
+    }
+
+    private void addTempState(final MiniGameState tempState) {
+
+        MiniGameState finaTempState = tempState.toBuilder()
                 .lastActionResults(this.actionResultsCache != null ? List.copyOf(this.actionResultsCache) : null)
                 .build();
+        this.tempStates = ListUtil.concat(this.tempStates, finaTempState);
+
         this.clearActionResultsCache();
     }
 
@@ -76,24 +87,29 @@ public class MiniGame {
                 .toSituation()
                 .toMiniGameStateSituation();
 
-        this.changeCurrentState(
+        this.addTempState(
                 MiniGameState.builder()
                         .player(player)
                         .currentSituation(nextSituation)
                         .currentCreatures(this.createCreatures(nextSituation.getMaxCreatures()))
                         .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
+                        .build()
         );
-        return this;
+        return changeCurrentState();
     }
 
     public MiniGame executeAction(final String actionId) {
 
-        this.changeCurrentState(
+        MiniGameState.Action action = getActionById(actionId);
+
+        this.addTempState(
                 this.currentState.toBuilder()
-                        .lastAction(getActionById(actionId))
+                        .lastAction(action)
+                        .build()
         );
 
-        return this.currentState.getLastAction().getType().runAllExecutors(this);
+        action.getType().runAllExecutors(this);
+        return changeCurrentState();
     }
 
 
@@ -104,12 +120,13 @@ public class MiniGame {
         MiniGameState.Situation nextSituation = this.dataCache.getRandomSituationByRoomId(nextRoom.getId());
 
 
-        this.changeCurrentState(
+        this.addTempState(
                 this.currentState.toBuilder()
                         .currentRoom(nextRoom)
                         .currentSituation(nextSituation)
                         .currentCreatures(this.createCreatures(nextSituation.getMaxCreatures()))
                         .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
+                        .build()
         );
     }
 
@@ -121,11 +138,12 @@ public class MiniGame {
 
         List<MiniGameState.Creature> currentCreatures = this.currentState.getCurrentCreatures();
 
-        this.changeCurrentState(
+        this.addTempState(
                 this.currentState.toBuilder()
                         .currentSituation(nextSituation.toMiniGameStateSituation())
                         .currentCreatures(ListUtil.concat(currentCreatures, this.createCreatures(nextSituation.getMaxCreatures())))
                         .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
+                        .build()
         );
 
     }
@@ -141,10 +159,11 @@ public class MiniGame {
                         .map(creature -> creature.attackIfPossible(player))
                         .collect(Collectors.toList());
 
-        this.changeCurrentState(
+        this.addTempState(
                 this.currentState.toBuilder()
                         .currentCreatures(creatures)
                         .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build()
         );
 
     }
@@ -160,10 +179,11 @@ public class MiniGame {
 
         player.damage(damage);
 
-        this.changeCurrentState(
+        this.addTempState(
                 this.currentState.toBuilder()
                         .player(player)
                         .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build()
         );
     }
 
@@ -174,10 +194,11 @@ public class MiniGame {
                         .collect(Collectors.toList());
 
 
-        this.changeCurrentState(
+        this.addTempState(
                 this.currentState.toBuilder()
                         .currentCreatures(creatures)
                         .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build()
         );
     }
 
@@ -197,20 +218,22 @@ public class MiniGame {
 //            removeClosiestEnemy();
 //        }
 
-        this.changeCurrentState(
+        this.addTempState(
                 this.currentState.toBuilder()
                         //.currentCreatures(creatures)
                         .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build()
         );
 
     }
 
     public void spawnEnemy() {
 
-        this.changeCurrentState(
+        this.addTempState(
                 this.currentState.toBuilder()
                         .currentCreatures(createCreatures(this.difficult.getDifficult()))
                         .currentActions(this.getAllActionsBySituationId(this.currentState.getCurrentSituation().getId()))
+                        .build()
         );
 
     }
