@@ -3,6 +3,7 @@ package com.game.model.minigame.representation;
 import com.game.model.EventGenerated;
 import com.game.model.minigame.MiniGame;
 import com.game.model.minigame.MiniGameDifficult;
+import com.game.model.minigame.Stage;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
@@ -18,6 +19,7 @@ public class MiniGameRepresentation {
 
     @Id
     private String id;
+    private Stage stage;
     private String playerId;
     private EventGenerated eventGenerated;
     private MiniGameDifficult difficult;
@@ -35,6 +37,7 @@ public class MiniGameRepresentation {
         return MiniGame.builder()
                 .id(this.getId())
                 .playerId(this.getPlayerId())
+                .stage(this.getStage())
                 .eventGenerated(this.getEventGenerated())
                 .difficult(this.getDifficult())
                 .currentState(this.getCurrentState().toMiniGameState())

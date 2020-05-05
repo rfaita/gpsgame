@@ -1,10 +1,9 @@
 package com.game.model.minigame;
 
-import com.game.model.Action;
+import com.game.exception.GenericException;
 import com.game.model.EventGenerated;
 import com.game.model.Player;
 import com.game.model.Situation;
-import com.game.model.action.ActionType;
 import com.game.model.minigame.representation.MiniGameRepresentation;
 import com.game.model.type.ActionResultType;
 import com.game.util.ListUtil;
@@ -15,12 +14,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.game.exception.ExceptionMessageConstant.ACTION_NOT_FOUND;
+
 @Document
 @Builder
 public class MiniGame {
 
     @Id
     private String id;
+    private Stage stage;
     private String playerId;
     private EventGenerated eventGenerated;
     private MiniGameDifficult difficult;
@@ -44,6 +46,13 @@ public class MiniGame {
     private MiniGame changeCurrentState() {
         this.saveCurrentState();
         this.currentState = this.tempStates.stream().reduce(MiniGameState::merge).get();
+        //actions verifiers must be executed AFTER the chance of state,
+        //because we need the result of last action to filter the new current actions
+        this.currentState = this.currentState.toBuilder()
+                .currentActions(this.currentState.getCurrentActions().stream()
+                        .filter(action -> action.getType().runAllVerifiers(MiniGame.this))
+                        .collect(Collectors.toList()))
+                .build();
         return this;
     }
 
@@ -81,21 +90,27 @@ public class MiniGame {
 
         this.playerId = player.getId();
 
+        this.stage = Stage.RUNNING;
+
         this.difficult = MiniGameDifficult.MEDIUM;
 
-        MiniGameState.Situation nextSituation = this.eventGenerated.getFirstSituation()
-                .toSituation()
-                .toMiniGameStateSituation();
+        MiniGameState.Situation nextSituation = this.eventGenerated.getFirstSituation().toMiniGameStateSituation();
 
         this.addTempState(
                 MiniGameState.builder()
                         .player(player)
                         .currentSituation(nextSituation)
-                        .currentCreatures(this.createCreatures(nextSituation.getMaxCreatures()))
+                        .currentCreatures(this.createCreatures(nextSituation.getNumberOfCreatures()))
                         .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
                         .build()
         );
         return changeCurrentState();
+    }
+
+    public void end() {
+        this.currentState = null;
+        this.stage = Stage.DONE;
+
     }
 
     public MiniGame executeAction(final String actionId) {
@@ -124,7 +139,7 @@ public class MiniGame {
                 this.currentState.toBuilder()
                         .currentRoom(nextRoom)
                         .currentSituation(nextSituation)
-                        .currentCreatures(this.createCreatures(nextSituation.getMaxCreatures()))
+                        .currentCreatures(this.createCreatures(nextSituation.getNumberOfCreatures()))
                         .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
                         .build()
         );
@@ -140,7 +155,7 @@ public class MiniGame {
 
         this.addTempState(
                 this.currentState.toBuilder()
-                        .currentSituation(nextSituation.toMiniGameStateSituation())
+                        .currentSituation(nextSituation.toEventGeneratedSituation().toMiniGameStateSituation())
                         .currentCreatures(ListUtil.concat(currentCreatures, this.createCreatures(nextSituation.getMaxCreatures())))
                         .currentActions(this.getAllActionsBySituationId(nextSituation.getId()))
                         .build()
@@ -155,8 +170,7 @@ public class MiniGame {
 
         List<MiniGameState.Creature> creatures =
                 this.currentState.getCurrentCreatures().stream()
-                        .map(MiniGameState.Creature::move)
-                        .map(creature -> creature.attackIfPossible(player))
+                        .map(creature -> creature.doAction(player))
                         .collect(Collectors.toList());
 
         this.addTempState(
@@ -166,6 +180,10 @@ public class MiniGame {
                         .build()
         );
 
+    }
+
+    public MiniGameState currentState() {
+        return this.currentState;
     }
 
     public Player currentPlayerState() {
@@ -277,18 +295,19 @@ public class MiniGame {
     private MiniGameState.Action getActionById(final String actionId) {
         return this.currentState.getCurrentActions().stream()
                 .filter(action -> actionId.equals(action.getId()))
-                .findFirst().orElse(MiniGameState.Action.builder().type(ActionType.NO_OP).build());
+                .findFirst().orElseThrow(() -> GenericException.of(ACTION_NOT_FOUND, actionId));
     }
 
     private List<MiniGameState.Action> getAllActionsBySituationId(final String situationId) {
-        return this.dataCache.getAllActionsBySituationId(situationId).stream()
-                .filter(action -> action.getType().runAllVerifiers(MiniGame.this))
+        return this.dataCache.getAllActionsBySituationId(situationId)
+                .stream()
                 .collect(Collectors.toList());
     }
 
     public MiniGameRepresentation toMiniGameRepresentation() {
         return MiniGameRepresentation.builder()
                 .id(this.id)
+                .stage(this.stage)
                 .playerId(this.getPlayerId())
                 .eventGenerated(this.eventGenerated)
                 .difficult(this.difficult)

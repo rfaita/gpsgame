@@ -10,21 +10,23 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Document
-public class Place {
+public class Place implements HasRarity {
 
     @Id
     private String id;
-    private Integer size;
+    private Integer minSize;
+    private Integer maxSize;
     private PlaceType type;
+    private Rarity rarity;
 
     public EventGenerated.Place toEventGeneratedPlace() {
         return EventGenerated.Place.builder()
                 .id(this.getId())
-                .size(this.getSize())
+                .size(this.getMinSize())
                 .type(this.getType())
                 .build();
 

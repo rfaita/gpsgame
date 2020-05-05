@@ -4,7 +4,6 @@ import com.game.dto.GenericValue;
 import com.game.dto.Message;
 import com.game.dto.MessageType;
 import com.game.dto.VisitEventMessage;
-import com.game.model.minigame.MiniGame;
 import com.game.model.minigame.representation.MiniGameRepresentation;
 import com.game.service.EventGeneratedService;
 import com.game.service.MiniGameOrchestrator;

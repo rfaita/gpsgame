@@ -11,16 +11,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Document
-public class Room {
+public class Room implements HasRarity {
 
     @Id
     private String id;
+    private Integer maxItems;
     private List<String> usedInPlaces;
-
+    private Rarity rarity;
 
     public MiniGameState.Room toMiniGameStateRoom() {
         return MiniGameState.Room.builder()

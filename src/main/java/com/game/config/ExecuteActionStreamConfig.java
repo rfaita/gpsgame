@@ -4,7 +4,6 @@ import com.game.dto.ExecuteAction;
 import com.game.dto.ExecuteActionMessage;
 import com.game.dto.Message;
 import com.game.dto.MessageType;
-import com.game.model.minigame.MiniGame;
 import com.game.model.minigame.representation.MiniGameRepresentation;
 import com.game.service.MiniGameOrchestrator;
 import lombok.extern.slf4j.Slf4j;

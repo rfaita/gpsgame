@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface SituationRepository extends ReactiveMongoRepository<Situation, String>, FindByRandomRepository<Situation> {
+public interface SituationRepository extends ReactiveMongoRepository<Situation, String> {
 
     @Aggregation(pipeline = {"{ $match: { usedInPlaces: { $all: ['?0']}, type: '?1' } }", "{ $sample: { size: 1 } }"})
     Mono<Situation> findByUsedInPlacesAndTypeAndRandom(String placeId, SituationType type);

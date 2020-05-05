@@ -4,6 +4,7 @@ import com.game.config.properties.EventProperties;
 import com.game.dto.Position;
 import com.game.model.Event;
 import com.game.repository.EventRepository;
+import com.game.util.RandomUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,7 +21,6 @@ import java.util.UUID;
 public class EventService {
 
     private final EventProperties eventProperties;
-    private final RandomService randomService;
     private final EventRepository eventRepository;
 
     public Mono<String> generate(Position position) {
@@ -43,11 +43,11 @@ public class EventService {
 
     private Long generateEventDuration() {
         return System.currentTimeMillis()
-                + randomService.random(eventProperties.getMinEventDuration(), eventProperties.getMaxEventDuration());
+                + RandomUtil.random(eventProperties.getMinEventDuration(), eventProperties.getMaxEventDuration());
     }
 
     private Mono<Boolean> rollDice() {
-        return Mono.just(randomService.randomPercentage() <= eventProperties.getEventPercentageGenerator());
+        return Mono.just(RandomUtil.randomPercentage() <= eventProperties.getEventPercentageGenerator());
     }
 
     private Mono<Boolean> canGenerateEventsInRadius(Position position) {

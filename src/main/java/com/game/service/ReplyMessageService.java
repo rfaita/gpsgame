@@ -14,7 +14,7 @@ public class ReplyMessageService {
     private final ReplayProcessor<Message> processor;
 
     public ReplyMessageService() {
-        this.processor = ReplayProcessor.cacheLast();
+        this.processor = ReplayProcessor.create(0);
     }
 
 

@@ -3,6 +3,7 @@ package com.game.service;
 import com.game.exception.GenericException;
 import com.game.model.EventGenerated;
 import com.game.model.minigame.MiniGame;
+import com.game.model.minigame.Stage;
 import com.game.model.minigame.representation.MiniGameRepresentation;
 import com.game.repository.MiniGameRepresentationRepository;
 import lombok.AllArgsConstructor;
@@ -11,8 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-import static com.game.exception.ExceptionMessageConstant.MINI_GAME_NOT_FOUND;
-import static com.game.exception.ExceptionMessageConstant.PLAYER_ACCESS_NOT_PERMITTED_GAME;
+import static com.game.exception.ExceptionMessageConstant.*;
 
 @Service
 @AllArgsConstructor
@@ -61,6 +61,8 @@ public class MiniGameOrchestrator {
     private Mono<MiniGame> loadMiniGameState(String miniGameId) {
         return this.miniGameRepository.findById(miniGameId)
                 .switchIfEmpty(Mono.error(GenericException.of(MINI_GAME_NOT_FOUND, miniGameId)))
+                .filter(miniGameRepresentation -> miniGameRepresentation.getStage().equals(Stage.RUNNING))
+                .switchIfEmpty(Mono.error(GenericException.of(MINI_GAME_ENDED, miniGameId)))
                 .map(MiniGameRepresentation::toMiniGame)
                 .flatMap(miniGame -> this.miniGameDataCacheService.load()
                         .map(miniGameDataCache -> miniGame.dataCache(miniGameDataCache))

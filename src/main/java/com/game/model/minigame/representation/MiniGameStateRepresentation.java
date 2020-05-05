@@ -4,12 +4,9 @@ import com.game.model.Player;
 import com.game.model.action.ActionType;
 import com.game.model.minigame.MiniGameState;
 import com.game.model.type.ActionResultType;
-import com.game.util.RandomUtil;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.data.annotation.Transient;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,12 +57,12 @@ public class MiniGameStateRepresentation {
     @Getter
     public static class Situation {
         private String id;
-        private Integer maxCreatures;
+        private Integer numberOfCreatures;
 
         public MiniGameState.Situation toSituation() {
             return MiniGameState.Situation.builder()
                     .id(this.getId())
-                    .maxCreatures(this.getMaxCreatures())
+                    .numberOfCreatures(this.getNumberOfCreatures())
                     .build();
         }
     }

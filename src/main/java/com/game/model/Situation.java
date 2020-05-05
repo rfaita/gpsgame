@@ -1,6 +1,5 @@
 package com.game.model;
 
-import com.game.model.minigame.MiniGameState;
 import com.game.model.type.SituationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,22 +23,17 @@ public class Situation {
     private List<String> usedInPlaces;
     private List<String> usedInRooms;
     private List<String> usedInSituations;
-    private Integer maxSurvivors;
+    private Integer minCreatures;
     private Integer maxCreatures;
 
     public EventGenerated.Situation toEventGeneratedSituation() {
         return EventGenerated.Situation.builder()
                 .id(this.getId())
+                .minCreatures(this.getMinCreatures())
                 .maxCreatures(this.getMaxCreatures())
                 .type(this.getType())
                 .build();
 
     }
 
-    public MiniGameState.Situation toMiniGameStateSituation() {
-        return MiniGameState.Situation.builder()
-                .id(this.getId())
-                .maxCreatures(this.getMaxCreatures())
-                .build();
-    }
 }

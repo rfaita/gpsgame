@@ -1,9 +1,12 @@
 package com.game.model.minigame;
 
 import com.game.model.*;
+import com.game.util.RandomUtil;
 import lombok.Builder;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -17,10 +20,21 @@ public class MiniGameDataCache {
     private List<Creature> allCreatures;
 
     public MiniGameState.Room getRandomRoomByPlaceId(String placeId) {
-        return this.allRooms.stream()
+
+        final Double randomRarity = RandomUtil.random(1d);
+
+        List<Room> filteredRooms = this.allRooms.stream()
                 .filter(room -> room.getUsedInPlaces().contains(placeId))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
-                .findAny()
+                .collect(Collectors.toList());
+
+        List<HasRarity> filteredRarities = new ArrayList<>(filteredRooms);
+
+        Map<String, Rarity> rarities = Rarity.calculateRarities(filteredRarities);
+
+        return filteredRooms.stream()
+                .filter(room -> rarities.get(room.getId()).getMinRarity() <= randomRarity
+                        && randomRarity < rarities.get(room.getId()).getMaxRarity())
+                .findFirst()
                 .map(Room::toMiniGameStateRoom)
                 .get();
     }
@@ -28,25 +42,25 @@ public class MiniGameDataCache {
     public MiniGameState.Situation getRandomSituationByPlaceId(String placeId) {
         return this.allSituations.stream()
                 .filter(situation -> situation.getUsedInPlaces().contains(placeId))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+                .sorted((o1, o2) -> RandomUtil.random(-1, 1))
                 .findAny()
-                .map(Situation::toMiniGameStateSituation)
+                .map(situation -> situation.toEventGeneratedSituation().toMiniGameStateSituation())
                 .get();
     }
 
     public MiniGameState.Situation getRandomSituationByRoomId(String roomId) {
         return this.allSituations.stream()
                 .filter(situation -> situation.getUsedInRooms().contains(roomId))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+                .sorted((o1, o2) -> RandomUtil.random(-1, 1))
                 .findAny()
-                .map(Situation::toMiniGameStateSituation)
+                .map(situation -> situation.toEventGeneratedSituation().toMiniGameStateSituation())
                 .get();
     }
 
     public MiniGameState.Creature getRandomCreatureByDifficult(MiniGameDifficult difficult) {
         return this.allCreatures.stream()
                 .filter(creature -> creature.getDifficult().equals(difficult))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+                .sorted((o1, o2) -> RandomUtil.random(-1, 1))
                 .findAny()
                 .map(Creature::toMiniGameStateCreature)
                 .get();
@@ -56,14 +70,15 @@ public class MiniGameDataCache {
     public Situation getRandomSituationBySituationId(String situationId) {
         return this.allSituations.stream()
                 .filter(situation -> situation.getUsedInSituations().contains(situationId))
-                .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+                .sorted((o1, o2) -> RandomUtil.random(-1, 1))
                 .findAny()
                 .get();
     }
 
     public List<MiniGameState.Action> getAllActionsBySituationId(String situationId) {
         return this.allActions.stream()
-                .filter(action -> action.getUsedInSituations().contains(situationId))
+                .filter(action -> action.getUsedInSituations().contains(situationId)
+                        || action.getUsedInSituations().contains("*"))
                 .map(Action::toMiniGameStateAction)
                 .collect(Collectors.toList());
     }

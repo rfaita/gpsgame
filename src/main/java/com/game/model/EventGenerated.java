@@ -1,7 +1,9 @@
 package com.game.model;
 
+import com.game.model.minigame.MiniGameState;
 import com.game.model.type.PlaceType;
 import com.game.model.type.SituationType;
+import com.game.util.RandomUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,16 +40,15 @@ public class EventGenerated {
     @NoArgsConstructor
     public static class Situation {
         private String id;
+        private Integer minCreatures;
         private Integer maxCreatures;
         private SituationType type;
 
-        public com.game.model.Situation toSituation() {
-            return com.game.model.Situation.builder()
+        public MiniGameState.Situation toMiniGameStateSituation() {
+            return MiniGameState.Situation.builder()
                     .id(this.getId())
-                    .type(this.getType())
-                    .maxCreatures(this.getMaxCreatures())
+                    .numberOfCreatures(RandomUtil.random(this.getMinCreatures(), this.getMaxCreatures()))
                     .build();
-
         }
     }
 }

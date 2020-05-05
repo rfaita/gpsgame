@@ -76,12 +76,12 @@ public class MiniGameState {
     @Getter
     public static class Situation {
         private String id;
-        private Integer maxCreatures;
+        private Integer numberOfCreatures;
 
         public MiniGameStateRepresentation.Situation toSituation() {
             return MiniGameStateRepresentation.Situation.builder()
                     .id(this.getId())
-                    .maxCreatures(this.getMaxCreatures())
+                    .numberOfCreatures(this.getNumberOfCreatures())
                     .build();
         }
     }
@@ -151,7 +151,17 @@ public class MiniGameState {
             }
         }
 
-        public Creature move() {
+        public Creature doAction(Player player) {
+            if (this.distance == 0) {
+                attackIfPossible(player);
+            } else {
+                move();
+            }
+
+            return this;
+        }
+
+        private Creature move() {
             if (this.distance - this.moveSpeed <= 0) {
                 this.distance = 0;
 
@@ -162,11 +172,11 @@ public class MiniGameState {
             } else {
                 this.distance -= this.moveSpeed;
             }
+
             return this;
         }
 
-        public Creature attackIfPossible(Player player) {
-
+        private Creature attackIfPossible(Player player) {
             if (this.knockedDown > 0) {
                 this.knockedDown--;
                 if (this.knockedDown == 0) {
@@ -180,7 +190,7 @@ public class MiniGameState {
             if (this.distance == 0 && this.knockedDown == 0) {
                 if (RandomUtil.randomPercentage() > 50) {
                     //do dmg to player
-                    Integer dmg = 1;
+                    Integer dmg = RandomUtil.random(1, 10);
 
                     player.damage(dmg);
 

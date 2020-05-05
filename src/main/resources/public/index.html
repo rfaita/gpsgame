@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<style>
+    #actions {
+        clear: both;
+    }
+
+    #log,
+    #gameLog,
+    #lastActionResults,
+    #currentCreatures {
+        width: 400px;
+        height: 350px;
+    }
+
+
+    * {
+        font-family: Verdana, Geneva, Tahoma, sans-serif
+    }
+</style>
+
+
+<script language="javascript" type="text/javascript">
+
+    var playerId 
+
+    
+    var currentLat = 0;
+    var currentLon = 0;
+    var currentGameId = 0;
+
+    function init() {
+
+        clearLog();
+
+        document.getElementById("log").value = "";
+        document.getElementById("gameLog").value = "";
+        document.getElementById("lastActionResults").value = "";
+        document.getElementById("currentCreatures").value = "";
+
+        document.getElementById("connect").onclick = () => connect();
+        
+    }
+
+    function connect() {
+
+        playerId = document.getElementById("playerID").value;
+
+        writeToLog("OPENING CONNECING TO GAME SERVER");
+
+        var wsUri = `ws://localhost:9091/ws/game/${playerId}`;
+
+        websocket = new WebSocket(wsUri);
+        websocket.onopen = function (evt) { onOpen(evt) };
+        websocket.onclose = function (evt) { onClose(evt) };
+        websocket.onmessage = function (evt) { onMessage(evt) };
+        websocket.onerror = function (evt) { onError(evt) };
+    }
+
+    function onOpen(evt) {
+        writeToLog("CONNECTED");        
+
+        document.getElementById("showDebug").onclick = () => showDebug();
+        document.getElementById("up").onclick = () => doSendTrackMessage("UP");
+        document.getElementById("down").onclick = () => doSendTrackMessage("DOWN");
+        document.getElementById("left").onclick = () => doSendTrackMessage("LEFT");
+        document.getElementById("right").onclick = () => doSendTrackMessage("RIGHT");
+        document.getElementById("clearLog").onclick = () => clearLog();
+    }
+
+    function onClose(evt) {
+        writeToLog("DISCONNECTED");
+    }
+
+    function onMessage(evt) {
+        writeToLog("<<<\n" + evt.data);
+
+        var data = JSON.parse(evt.data);
+
+        var actions = document.getElementById("actions");
+
+        if (data.type === "EVENT_NOTIFICATION") {
+            for (var k in data.payload) {
+                actions.innerHTML += `<button type="button" class="btn btn-secondary" onclick="doSendVisitEventMessage('${data.payload[k].id}')">Visitar Evento(${data.payload[k].id.substr(0, 4)})</button>`;
+            }
+        }
+        if (data.type === "NEW_EVENT_NOTIFICATION") {
+            for (var k in data.payload) {
+                actions.innerHTML += `<button type="button" class="btn btn-secondary" onclick="doSendVisitEventMessage('${data.payload[k].id}')">Visitar Novo Evento(${data.payload[k].id.substr(0, 4)})</button>`;
+            }
+        }
+        if (data.type === "START_EVENT") {
+            currentGameId = data.payload.id;
+            writeGameInfo(data.payload);
+
+            var html = `<div class="btn-group" role="group" aria-label="Custom actions">`;
+            for (var k in data.payload.currentState.currentActions) {
+                var currentAction = data.payload.currentState.currentActions[k];
+                html += `<button type="button" class="btn btn-secondary" onclick="doSendActionMessage('${currentAction.id}')">${currentAction.id}</button>`;
+            }
+            html += `</div>`;
+            actions.innerHTML += html
+        }
+        if (data.type === "UPDATE_EVENT") {
+            writeGameInfo(data.payload);
+            var html = `<div class="btn-group" role="group" aria-label="Custom actions">`;
+            for (var k in data.payload.currentState.currentActions) {
+                var currentAction = data.payload.currentState.currentActions[k];
+                html += `<button type="button" class="btn btn-secondary" onclick="doSendActionMessage('${currentAction.id}')">${currentAction.id}</button>`;
+            }
+            html += `</div>`;
+            actions.innerHTML += html
+        }
+    }
+
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+    }
+
+    function doSend(message) {
+        var m = JSON.stringify(message);
+        writeToLog(">>>\n" + m);
+        websocket.send(m);
+
+        var actions = document.getElementById("actions");
+
+        actions.innerHTML = "";
+    }
+
+    function clearLog() {
+        document.getElementById("log").value = "";
+    }
+
+    function writeToLog(message) {
+        var log = document.getElementById("log");
+
+        log.value = log.value + "\n" + message;
+
+        log.scrollTop = log.scrollHeight
+
+    }
+
+    function writeGameInfo(game) {
+        var gameLog = document.getElementById("gameLog");
+
+        var currentRoom = !!game.currentState.currentRoom ? game.currentState.currentRoom.id : "";
+        var currentSituation = !!game.currentState.currentSituation ? game.currentState.currentSituation.id : "";
+                
+        gameLog.value =
+            `ID: ${game.id}
+STAGE: ${game.stage}
+EVENT: ${game.eventGenerated.id}
+PLACE: ${game.eventGenerated.place.id}
+FIRST SITUATION: ${game.eventGenerated.firstSituation.id}
+DIFFICULT: ${game.difficult}
+CURRENT ROOM: ${currentRoom}
+CURRENT SITUATION: ${currentSituation}
+PLAYER:
+    ID: ${playerId}`;
+
+        gameLog.scrollTop = gameLog.scrollHeight
+
+
+        var lastActionResults = document.getElementById("lastActionResults");
+
+        lastActionResults.value = "";
+        for (var k in game.currentState.lastActionResults) {
+            var result = game.currentState.lastActionResults[k];
+            lastActionResults.value += `${result.type}: ${result.args}\n`;
+        }
+
+        var currentCreatures = document.getElementById("currentCreatures");
+
+        currentCreatures.value = "";
+        for (var k in game.currentState.currentCreatures) {
+            var creature = game.currentState.currentCreatures[k];
+            currentCreatures.value +=
+                `${creature.id}: 
+    Distance: ${creature.distance}
+    Move Speed: ${creature.moveSpeed}
+    HP Head: ${creature.hpHead}
+    HP Arms: ${creature.hpBody}
+    HP Body: ${creature.hpArms}
+    HP Legs: ${creature.hpLegs}
+    Buring: ${creature.burning}
+    Head Fractured: ${creature.headFractured}
+    Arms Fractured: ${creature.armsFractured}
+    Body Fractured: ${creature.bodyFractured}    
+    Legs Fractured: ${creature.legsFractured}
+    Knocked Down: ${creature.knockedDown}\n`;
+
+        }
+    }
+
+    function doSendTrackMessage(direction) {
+        if (direction === "UP") {
+            currentLat += 0.1;
+        } else if (direction === "DOWN") {
+            currentLat -= 0.1;
+        } else if (direction === "RIGHT") {
+            currentLon += 0.1;
+        } else if (direction === "LEFT") {
+            currentLon -= 0.1;
+        }
+
+        doSend({ type: "TRACK_GPS", "payload": { "lat": currentLat, "lon": currentLon } })
+    }
+
+    function doSendVisitEventMessage(eventId) {
+        doSend({ type: "VISIT_EVENT", payload: { value: eventId } })
+    }
+
+    function doSendActionMessage(actionId) {
+        doSend({ type: "EXECUTE_ACTION_EVENT", payload: { miniGameId: currentGameId, actionId: actionId } })
+    }
+
+    function showDebug() {
+        document.getElementById("debug").style.display = "";
+        document.getElementById("clearLog").style.display = "";
+    }
+
+    window.addEventListener("load", init, false);
+
+</script>
+
+<body>
+
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" placeholder="Player ID" aria-label="Player ID" id="playerID" aria-describedby="connect">
+        <div class="input-group-append">
+          <button class="btn btn-outline-secondary" type="button" id="connect">Connect</button>
+        </div>
+      </div>
+
+    <div id="default_actions mb-3">
+        <button type="button" class="btn btn-danger" id="showDebug">Show Debug</button>
+        <button type="button" class="btn btn-info" id="clearLog" style="display: none;">Clear Log</button>
+        <div class="btn-group" role="group" aria-label="Default actions">
+            <button type="button" class="btn btn-dark" id="up">UP</button>
+            <button type="button" class="btn btn-dark" id="down">DOWN</button>
+            <button type="button" class="btn btn-dark" id="left">LEFT</button>
+            <button type="button" class="btn btn-dark" id="right">RIGHT</button>
+        </div>
+    </div>
+
+    <div id="logs">
+        <div class="float-left" id="debug" style="display: none;">
+            <div class="form-group">
+                <label for="log">Server Logs</label>
+                <textarea class="form-control" id="log" rows="20"></textarea>
+            </div>
+        </div>
+        <div class="float-left">
+            <div class="form-group">
+                <label for="gameLog">Game Info</label>
+                <textarea class="form-control" id="gameLog" rows="20"></textarea>
+            </div>
+        </div>
+        <div class="float-left">
+            <div class="form-group">
+                <label for="currentCreatures">Creatures Situation</label>
+                <textarea class="form-control" id="currentCreatures" rows="20"></textarea>
+            </div>
+        </div>
+        <div class="float-left">
+            <div class="form-group">
+                <label for="lastActionResults">Last Action Results</label>
+                <textarea class="form-control" id="lastActionResults" rows="20"></textarea>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div id="actions">
+
+    </div>
+
+</body>
+
+
+</html>

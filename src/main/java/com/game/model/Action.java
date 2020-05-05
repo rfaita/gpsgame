@@ -2,7 +2,6 @@ package com.game.model;
 
 import com.game.model.action.ActionType;
 import com.game.model.minigame.MiniGameState;
-import com.game.model.type.NoiseLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

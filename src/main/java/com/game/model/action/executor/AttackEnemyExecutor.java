@@ -12,7 +12,7 @@ public class AttackEnemyExecutor implements ActionExecutor {
 
         //calculate the percentage of miss or not
         if (true) {
-            Integer dano = 1000; //player.getMainWeapon().getDmg()
+            Integer dano = 10; //player.getMainWeapon().getDmg()
             miniGame.damageCloserEnemy(dano);
         }
 
