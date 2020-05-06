@@ -10,7 +10,7 @@ public class EnemiesSpawnExecutor implements ActionExecutor {
     @Override
     public MiniGame apply(MiniGame miniGame) {
 
-        Player player = miniGame.currentPlayerState();
+        Player player = miniGame.getCurrentPlayerState();
 
         NoiseLevel weaponNoiseLevel = NoiseLevel.LOW;//player.getMainWeapon().getNoiseLevel();
 

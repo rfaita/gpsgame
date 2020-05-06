@@ -19,5 +19,9 @@ public class PlayerPositionService {
         return this.repository.save(playerPosition);
     }
 
+    public Mono<PlayerPosition> findByPlayerId(String playerId) {
+        return this.repository.findById(playerId);
+    }
+
 
 }

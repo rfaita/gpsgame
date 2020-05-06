@@ -9,16 +9,16 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 @Configuration
-@ConfigurationProperties(prefix = "game.event")
+@ConfigurationProperties(prefix = "game")
 @Getter
 @Setter
-public class EventProperties {
+public class GameProperties {
 
     @Min(0)
     @Max(100)
     private Double eventPercentageGenerator = 20d;
 
-    private Integer radiusToFindEvents = 500;
+    private Integer radiusToIteractWithEvent = 500;
 
     private Integer maxEventsInArea = 2;
 

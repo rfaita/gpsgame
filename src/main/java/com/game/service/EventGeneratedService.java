@@ -1,6 +1,7 @@
 package com.game.service;
 
 import com.game.exception.GenericException;
+import com.game.model.Event;
 import com.game.model.EventGenerated;
 import com.game.model.type.SituationType;
 import com.game.repository.EventGeneratedRepository;
@@ -13,8 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import static com.game.exception.ExceptionMessageConstant.RANDOM_PLACE_NOT_FOUND;
-import static com.game.exception.ExceptionMessageConstant.RANDOM_SITUATION_NOT_FOUND;
+import static com.game.exception.ExceptionMessageConstant.*;
 
 @Service
 @AllArgsConstructor
@@ -29,18 +29,17 @@ public class EventGeneratedService {
     public Mono<EventGenerated> visit(final String id) {
         //if the player is not close enough to the event, ignore this action
 
-        return this.eventRepository.existsById(id)
-                .filter(Boolean::booleanValue)
-                .flatMap(canDo ->
-                        this.eventGeneratedRepository.findById(id)
-                                .switchIfEmpty(this.generate(id)));
+        return this.eventRepository.findById(id)
+                .flatMap(event -> event != null ? this.eventGeneratedRepository.findById(id).switchIfEmpty(this.generate(event)) : null)
+                .switchIfEmpty(Mono.error(GenericException.of(EVENT_NOT_FOUND, id)));
+
     }
 
     public Mono<EventGenerated> findById(String id) {
         return this.eventGeneratedRepository.findById(id);
     }
 
-    private Mono<EventGenerated> generate(final String id) {
+    private Mono<EventGenerated> generate(final Event event) {
 
         final Double randomRarity = RandomUtil.random(1d);
 
@@ -51,7 +50,8 @@ public class EventGeneratedService {
                                 .switchIfEmpty(Mono.error(GenericException.of(RANDOM_SITUATION_NOT_FOUND, place.getId())))
                                 .map(situation ->
                                         EventGenerated.builder()
-                                                .id(id)
+                                                .id(event.getId())
+                                                .position(event.getPosition())
                                                 .place(place.toEventGeneratedPlace())
                                                 .firstSituation(situation.toEventGeneratedSituation())
                                                 .build()))

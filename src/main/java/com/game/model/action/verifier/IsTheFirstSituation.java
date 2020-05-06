@@ -7,9 +7,9 @@ public class IsTheFirstSituation implements ActionVerifier {
     @Override
     public Boolean apply(MiniGame miniGame) {
         return miniGame
-                .currentState() != null
+                .getCurrentState() != null
                 && miniGame
-                .currentState()
+                .getCurrentState()
                 .getCurrentRoom() == null;
     }
 }

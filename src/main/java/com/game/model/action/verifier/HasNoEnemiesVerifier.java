@@ -7,12 +7,12 @@ public class HasNoEnemiesVerifier implements ActionVerifier {
     @Override
     public Boolean apply(MiniGame miniGame) {
         return miniGame
-                .currentState() != null
+                .getCurrentState() != null
                 && miniGame
-                .currentState()
+                .getCurrentState()
                 .getCurrentCreatures() != null
                 && miniGame
-                .currentState()
+                .getCurrentState()
                 .getCurrentCreatures().stream()
                 .count() <= 0;
     }

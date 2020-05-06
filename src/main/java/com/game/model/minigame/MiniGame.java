@@ -166,7 +166,7 @@ public class MiniGame {
 
     public void creaturesTurn() {
 
-        Player player = currentPlayerState();
+        Player player = getCurrentPlayerState();
 
         List<MiniGameState.Creature> creatures =
                 this.currentState.getCurrentCreatures().stream()
@@ -182,18 +182,22 @@ public class MiniGame {
 
     }
 
-    public MiniGameState currentState() {
+    public EventGenerated getEventGenerated() {
+        return this.eventGenerated;
+    }
+
+    public MiniGameState getCurrentState() {
         return this.currentState;
     }
 
-    public Player currentPlayerState() {
+    public Player getCurrentPlayerState() {
         //TODO: return only a COPY of player
         return this.currentState.getPlayer();
     }
 
     public void damagePlayer(Integer damage) {
 
-        Player player = this.currentPlayerState();
+        Player player = this.getCurrentPlayerState();
 
         player.damage(damage);
 

@@ -1,11 +1,14 @@
 package com.game.service;
 
+import com.game.config.properties.GameProperties;
+import com.game.dto.Position;
 import com.game.exception.GenericException;
 import com.game.model.EventGenerated;
 import com.game.model.minigame.MiniGame;
 import com.game.model.minigame.Stage;
 import com.game.model.minigame.representation.MiniGameRepresentation;
 import com.game.repository.MiniGameRepresentationRepository;
+import com.game.util.GeoUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -22,8 +25,11 @@ public class MiniGameOrchestrator {
     private final MiniGameDataCacheService miniGameDataCacheService;
 
     private final PlayerService playerService;
+    private final PlayerPositionService playerPositionService;
 
     private final MiniGameRepresentationRepository miniGameRepository;
+
+    private final GameProperties eventProperties;
 
     public Mono<MiniGameRepresentation> start(String playerId, EventGenerated event) {
         return start(playerId, Mono.just(event));
@@ -50,9 +56,20 @@ public class MiniGameOrchestrator {
         return this.loadMiniGameState(miniGameId)
                 .filter(miniGame -> miniGame.getPlayerId().equals(playerId))
                 .switchIfEmpty(Mono.error(() -> GenericException.of(PLAYER_ACCESS_NOT_PERMITTED_GAME, playerId, miniGameId)))
+                .zipWith(playerPositionService.findByPlayerId(playerId))
+                .filter(tuple -> isPlayerInMiniGameRadius(tuple.getT1(), tuple.getT2().toPosition()))
+                .switchIfEmpty(Mono.error(() -> GenericException.of(PLAYER_ACCESS_NOT_IN_RADIUS_OF_GAME, playerId, miniGameId)))
+                .map(tuple -> tuple.getT1())
                 .map(miniGame -> miniGame.executeAction(actionId))
                 .flatMap(this::saveMiniGameState);
     }
+
+    private Boolean isPlayerInMiniGameRadius(MiniGame miniGame, Position playerPosition) {
+
+        return GeoUtil.distance(miniGame.getEventGenerated().getPosition(), playerPosition)
+                <= eventProperties.getRadiusToIteractWithEvent();
+    }
+
 
     private Mono<MiniGame> loadMiniGameState(String miniGameId) {
         return this.miniGameRepository.findById(miniGameId)

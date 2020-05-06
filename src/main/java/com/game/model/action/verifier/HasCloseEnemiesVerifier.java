@@ -7,16 +7,16 @@ public class HasCloseEnemiesVerifier implements ActionVerifier {
     @Override
     public Boolean apply(MiniGame miniGame) {
         return miniGame
-                .currentState() != null
+                .getCurrentState() != null
                 && miniGame
-                .currentState()
+                .getCurrentState()
                 .getCurrentCreatures() != null
                 && miniGame
-                .currentState()
+                .getCurrentState()
                 .getCurrentCreatures().stream()
                 .filter(creature -> creature.getDistance() <= 0).count() > 0
                 && miniGame
-                .currentState()
+                .getCurrentState()
                 .getCurrentCreatures().stream()
                 .filter(creature -> creature.getKnockedDown() <= 0).count() > 0;
     }

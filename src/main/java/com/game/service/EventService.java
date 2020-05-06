@@ -1,6 +1,6 @@
 package com.game.service;
 
-import com.game.config.properties.EventProperties;
+import com.game.config.properties.GameProperties;
 import com.game.dto.Position;
 import com.game.model.Event;
 import com.game.repository.EventRepository;
@@ -21,14 +21,14 @@ import java.util.UUID;
 @Slf4j
 public class EventService {
 
-    private final EventProperties eventProperties;
+    private final GameProperties eventProperties;
     private final EventRepository eventRepository;
 
     public Mono<String> generate(Position position) {
 
         final String id = UUID.randomUUID().toString();
 
-        final Position eventPosition = GeoUtil.randomGeo(position, (int) (eventProperties.getRadiusToFindEvents() * 0.9));
+        final Position eventPosition = GeoUtil.randomGeo(position, (int) (eventProperties.getRadiusToIteractWithEvent() * 0.9));
 
         return this.rollDice()
                 .filter(Boolean::booleanValue)
@@ -55,7 +55,7 @@ public class EventService {
 
     private Mono<Boolean> canGenerateEventsInRadius(Position position) {
 
-        return eventRepository.findByCircle(position, eventProperties.getRadiusToFindEvents())
+        return eventRepository.findByCircle(position, eventProperties.getRadiusToIteractWithEvent())
                 .count()
                 .map(count -> count < eventProperties.getMaxEventsInArea());
 
@@ -63,7 +63,7 @@ public class EventService {
 
     public Flux<Event> findAllByPosition(Position position) {
 
-        return eventRepository.findByCircle(position, eventProperties.getRadiusToFindEvents());
+        return eventRepository.findByCircle(position, eventProperties.getRadiusToIteractWithEvent());
 
     }
 

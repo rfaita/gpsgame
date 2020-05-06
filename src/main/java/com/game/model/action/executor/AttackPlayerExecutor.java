@@ -8,7 +8,7 @@ public class AttackPlayerExecutor implements ActionExecutor {
     @Override
     public MiniGame apply(MiniGame miniGame) {
 
-        Player player = miniGame.currentPlayerState();
+        Player player = miniGame.getCurrentPlayerState();
 
         if (player.getId().equals("rfaita")) {
             Integer dano = 1000;

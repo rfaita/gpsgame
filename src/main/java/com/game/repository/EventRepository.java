@@ -42,10 +42,6 @@ public class EventRepository {
                 .flatMap(l -> this.redisTemplate.opsForGeo().remove(KEY_EVENT_NAME, ids.toArray(new String[]{})));
     }
 
-    public Mono<Boolean> existsById(String id) {
-        return findById(id).map(event -> event != null);
-    }
-
     public Mono<Event> findById(String id) {
         return this.redisTemplate.opsForGeo().position(KEY_EVENT_NAME, id)
                 .map(point ->

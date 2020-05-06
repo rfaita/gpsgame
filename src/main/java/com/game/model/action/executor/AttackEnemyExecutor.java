@@ -8,7 +8,7 @@ public class AttackEnemyExecutor implements ActionExecutor {
     @Override
     public MiniGame apply(MiniGame miniGame) {
 
-        Player player = miniGame.currentPlayerState();
+        Player player = miniGame.getCurrentPlayerState();
 
         //calculate the percentage of miss or not
         if (true) {

@@ -1,5 +1,6 @@
 package com.game.model;
 
+import com.game.dto.Position;
 import com.game.model.minigame.MiniGameState;
 import com.game.model.type.PlaceType;
 import com.game.model.type.SituationType;
@@ -22,6 +23,7 @@ public class EventGenerated {
     private String id;
     private Place place;
     private Situation firstSituation;
+    private Position position;
 
     @Data
     @Builder
