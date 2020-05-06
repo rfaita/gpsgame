@@ -30,8 +30,10 @@ public class EventGeneratedService {
         //if the player is not close enough to the event, ignore this action
 
         return this.eventRepository.findById(id)
-                .flatMap(event -> event != null ? this.eventGeneratedRepository.findById(id).switchIfEmpty(this.generate(event)) : null)
-                .switchIfEmpty(Mono.error(GenericException.of(EVENT_NOT_FOUND, id)));
+                .switchIfEmpty(Mono.error(GenericException.of(EVENT_NOT_FOUND, id)))
+                .flatMap(event ->
+                        this.eventGeneratedRepository.findById(id)
+                                .switchIfEmpty(this.generate(event)));
 
     }
 
