@@ -1,27 +1,41 @@
 package com.game.util;
 
+import com.game.dto.Position;
+
 public class GeoUtil {
 
+    private static final Integer EARTH_RADIUS = 6378100;
+    private static final Double METERS_IN_ONE_RADIUS = 111300d;
 
-    public static Double calculateDistance(Double latIni, Double lonIni, Double latEnd, Double lonEnd) {
-//        double theta = lonIni - lonEnd;
-//        double dist = Math.sin(deg2rad(latIni)) * Math.sin(deg2rad(latEnd))
-//                + Math.cos(deg2rad(lonIni)) * Math.cos(deg2rad(lonEnd)) * Math.cos(deg2rad(theta));
-//        dist = Math.acos(dist);
-//        dist = rad2deg(dist);
-//        dist = dist * 60 * 1.1515 * 1.609344;
-//        } else if (unit == 'N') {
-//            dist = dist * 0.8684;
-//        }
-//        return (dist);
-        return 0d;
+    public static Double distance(Position ini, Position end) {
+        Double a = 0.5 - Math.cos((end.getLat() - ini.getLat()) * Math.PI / 180) / 2
+                + Math.cos(ini.getLon() * Math.PI / 180)
+                * Math.cos(end.getLon() * Math.PI / 180)
+                * (1 - Math.cos((end.getLon() - ini.getLon()) * Math.PI / 180)) / 2;
+        return EARTH_RADIUS * 2 * Math.asin(Math.sqrt(a));
     }
 
-    public static Double deg2rad(Double deg) {
-        return (deg * Math.PI / 180.0);
+    public static Position randomGeo(Position center, Integer radiusInMeters) {
+        Double y0 = center.getLat();
+        Double x0 = center.getLon();
+        Double rd = radiusInMeters / METERS_IN_ONE_RADIUS;
+
+        Double u = Math.random();
+        Double v = Math.random();
+
+        Double w = rd * Math.sqrt(u);
+        Double t = 2 * Math.PI * v;
+        Double x = w * Math.cos(t);
+        Double y = w * Math.sin(t);
+
+        //Adjust the x-coordinate for the shrinking of the east-west distances
+        //????
+        //Double xp = x / Math.cos(y0);
+
+        return Position.builder()
+                .lat(y + y0)
+                .lon(x + x0)
+                .build();
     }
 
-    public static Double rad2deg(Double rad) {
-        return (rad * 180.0 / Math.PI);
-    }
 }

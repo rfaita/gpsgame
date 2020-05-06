@@ -54,10 +54,6 @@ public class MiniGameOrchestrator {
                 .flatMap(this::saveMiniGameState);
     }
 
-    public void finish(String miniGameId) {
-        //this.playerService.save()
-    }
-
     private Mono<MiniGame> loadMiniGameState(String miniGameId) {
         return this.miniGameRepository.findById(miniGameId)
                 .switchIfEmpty(Mono.error(GenericException.of(MINI_GAME_NOT_FOUND, miniGameId)))
@@ -70,7 +66,6 @@ public class MiniGameOrchestrator {
                 .map(miniGame -> miniGame.loadObservers());
 
     }
-
 
     private Mono<MiniGameRepresentation> saveMiniGameState(MiniGame miniGame) {
         return Mono.just(miniGame)

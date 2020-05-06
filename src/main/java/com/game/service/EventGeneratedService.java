@@ -42,7 +42,7 @@ public class EventGeneratedService {
 
     private Mono<EventGenerated> generate(final String id) {
 
-        Double randomRarity = RandomUtil.random(1d);
+        final Double randomRarity = RandomUtil.random(1d);
 
         return placeRepository.findByRarity_MinRarityLessThanEqualAndRarity_MaxRarityGreaterThan(randomRarity, randomRarity)
                 .switchIfEmpty(Mono.error(GenericException.of(RANDOM_PLACE_NOT_FOUND)))

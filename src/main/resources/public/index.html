@@ -201,14 +201,17 @@ PLAYER:
 
     function doSendTrackMessage(direction) {
         if (direction === "UP") {
-            currentLat += 0.1;
+            currentLat += 0.01;
         } else if (direction === "DOWN") {
-            currentLat -= 0.1;
+            currentLat -= 0.01;
         } else if (direction === "RIGHT") {
-            currentLon += 0.1;
+            currentLon += 0.01;
         } else if (direction === "LEFT") {
-            currentLon -= 0.1;
+            currentLon -= 0.01;
         }
+
+        document.getElementById("currentLat").value = currentLat;
+        document.getElementById("currentLon").value = currentLon;
 
         doSend({ type: "TRACK_GPS", "payload": { "lat": currentLat, "lon": currentLon } })
     }
@@ -248,6 +251,8 @@ PLAYER:
             <button type="button" class="btn btn-dark" id="left">LEFT</button>
             <button type="button" class="btn btn-dark" id="right">RIGHT</button>
         </div>
+        <input type="text" class="form-control" id="currentLat">
+        <input type="text" class="form-control" id="currentLon">
     </div>
 
     <div id="logs">

@@ -16,7 +16,7 @@ public class EventProperties {
 
     @Min(0)
     @Max(100)
-    private Double eventPercentageGenerator = 100d;
+    private Double eventPercentageGenerator = 20d;
 
     private Integer radiusToFindEvents = 500;
 

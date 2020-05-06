@@ -4,6 +4,7 @@ import com.game.config.properties.EventProperties;
 import com.game.dto.Position;
 import com.game.model.Event;
 import com.game.repository.EventRepository;
+import com.game.util.GeoUtil;
 import com.game.util.RandomUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,13 +28,15 @@ public class EventService {
 
         final String id = UUID.randomUUID().toString();
 
+        final Position eventPosition = GeoUtil.randomGeo(position, (int) (eventProperties.getRadiusToFindEvents() * 0.9));
+
         return this.rollDice()
                 .filter(Boolean::booleanValue)
                 .flatMap(canDo -> this.canGenerateEventsInRadius(position))
                 .filter(Boolean::booleanValue)
                 .map(canDo -> Event.builder()
                         .id(id)
-                        .position(position)
+                        .position(eventPosition)
                         .expireTime(generateEventDuration())
                         .build())
                 .flatMap(eventRepository::save)
@@ -62,6 +65,10 @@ public class EventService {
 
         return eventRepository.findByCircle(position, eventProperties.getRadiusToFindEvents());
 
+    }
+
+    public Mono<Event> findById(String id) {
+        return eventRepository.findById(id);
     }
 
     @Scheduled(fixedDelay = 10000)

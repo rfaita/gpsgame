@@ -1,6 +1,7 @@
 package com.game.model;
 
 import com.game.model.type.PlaceType;
+import com.game.util.RandomUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +27,7 @@ public class Place implements HasRarity {
     public EventGenerated.Place toEventGeneratedPlace() {
         return EventGenerated.Place.builder()
                 .id(this.getId())
-                .size(this.getMinSize())
+                .size(RandomUtil.random(this.getMinSize(), this.getMaxSize()))
                 .type(this.getType())
                 .build();
 
