@@ -40,15 +40,6 @@ public class DefaultWebSocketHandler implements WebSocketHandler {
         return parameters.getOrDefault("playerId", "undefined");
     }
 
-    private String getPlayerIdFromMessage(final String message) {
-        try {
-            Message m = mapper.readValue(message, Message.class);
-            return m.getPlayerId();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Parsing message error", e);
-        }
-    }
-
     private String parseMessageToString(final Message message) {
         try {
             return mapper.writeValueAsString(message);
